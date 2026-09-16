@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money.dart';
 import '../../../providers/egresos_dashboard_providers.dart';
+import '../../pendientes/pendientes_page.dart';
 
 /// Card con los pagos de obligaciones de gasto (fijas o progresivas) que ya
 /// deberían haberse pagado según su calendario y todavía no tienen una
-/// transacción que los cubra.
+/// transacción que los cubra. Toca la card para confirmarlos o cancelarlos
+/// en la pantalla de Pendientes.
 class CardProximosAVencer extends ConsumerWidget {
   const CardProximosAVencer({super.key});
 
@@ -16,76 +18,84 @@ class CardProximosAVencer extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.schedule_outlined,
-                  size: 18,
-                  color: theme.colorScheme.tertiary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Próximos a vencer',
-                    style: theme.textTheme.titleSmall,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const PendientesPage())),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.schedule_outlined,
+                    size: 18,
+                    color: theme.colorScheme.tertiary,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            pendientes.when(
-              data: (lista) {
-                if (lista.isEmpty) {
-                  return Text(
-                    'Sin pagos pendientes',
-                    style: theme.textTheme.bodySmall,
-                  );
-                }
-                final totalCentavos = lista.fold<int>(
-                  0,
-                  (acumulado, t) => acumulado + t.amount,
-                );
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      Money.centavosAPesos(totalCentavos),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Próximos a vencer',
+                      style: theme.textTheme.titleSmall,
                     ),
-                    Text(
-                      '${lista.length} pago(s) pendiente(s)',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              pendientes.when(
+                data: (lista) {
+                  if (lista.isEmpty) {
+                    return Text(
+                      'Sin pagos pendientes',
                       style: theme.textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 8),
-                    ...lista.take(2).map(
-                      (t) => Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          '• ${t.concept} · ${Money.centavosAPesos(t.amount)}',
-                          style: theme.textTheme.bodySmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    );
+                  }
+                  final totalCentavos = lista.fold<int>(
+                    0,
+                    (acumulado, t) => acumulado + t.amount,
+                  );
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        Money.centavosAPesos(totalCentavos),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: LinearProgressIndicator(),
+                      Text(
+                        '${lista.length} pago(s) pendiente(s)',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      ...lista
+                          .take(2)
+                          .map(
+                            (t) => Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                '• ${t.concept} · ${Money.centavosAPesos(t.amount)}',
+                                style: theme.textTheme.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                    ],
+                  );
+                },
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: LinearProgressIndicator(),
+                ),
+                error: (e, _) =>
+                    Text('Error al cargar', style: theme.textTheme.bodySmall),
               ),
-              error: (e, _) =>
-                  Text('Error al cargar', style: theme.textTheme.bodySmall),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

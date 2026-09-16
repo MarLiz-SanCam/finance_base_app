@@ -83,6 +83,45 @@ class ObligationsRepository {
     );
   }
 
+  /// Edita una obligación existente. `type` no se puede cambiar aquí a
+  /// propósito: determina si aplican los campos de progresivo y qué tipo de
+  /// categoría corresponde, así que cambiarlo a mitad de vida es
+  /// conceptualmente otra obligación (se borra y se crea una nueva).
+  Future<void> actualizar({
+    required String id,
+    required String concept,
+    required String categoryId,
+    String? accountId,
+    required ObligationFrequency frequency,
+    required int amountPerPeriodCentavos,
+    int? paymentDay,
+    int? totalAmountCentavos,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final actual = await obtener(id);
+    if (actual.type == ObligationType.progresivo &&
+        (totalAmountCentavos == null || startDate == null)) {
+      throw ArgumentError(
+        'Una obligación progresiva requiere totalAmountCentavos y startDate.',
+      );
+    }
+    await (_db.update(_db.obligations)..where((o) => o.id.equals(id))).write(
+      ObligationsCompanion(
+        concept: Value(concept),
+        categoryId: Value(categoryId),
+        accountId: Value(accountId),
+        frequency: Value(frequency),
+        amountPerPeriod: Value(amountPerPeriodCentavos),
+        paymentDay: Value(paymentDay),
+        totalAmount: Value(totalAmountCentavos),
+        startDate: Value(startDate),
+        endDate: Value(endDate),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
   /// Borrado suave (ver `AccountsRepository.eliminar`). Cancela (no borra)
   /// las transacciones `pendiente` que todavía dependían de esta
   /// obligación, para no dejar cuentas por pagar huérfanas que nadie va a

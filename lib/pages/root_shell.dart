@@ -4,10 +4,12 @@ import 'package:nav_bar_circles/nav_bar_circles.dart';
 import 'egresos/dash_egresos.dart';
 import 'home.dart';
 import 'ingresos/dash_ingresos.dart';
+import 'mas/mas_page.dart';
 
-/// Cascarón de navegación: Egresos, Inicio e Ingresos con una barra
+/// Cascarón de navegación: Egresos, Inicio, Ingresos y Más, con una barra
 /// inferior de círculos. El orden de [_paginas] e [_items] deja Inicio en
-/// el índice central, entre Egresos e Ingresos.
+/// el índice central entre Egresos e Ingresos, con Más al final (agrupa
+/// Cuentas, Categorías y Obligaciones).
 class RootShell extends StatefulWidget {
   const RootShell({super.key});
 
@@ -22,12 +24,14 @@ class _RootShellState extends State<RootShell> {
     DashEgresosPage(),
     HomePage(),
     DashIngresosPage(),
+    MasPage(),
   ];
 
   static const _items = [
     PillNavItem(icon: Icons.trending_down, label: 'Egresos'),
     PillNavItem(icon: Icons.home_rounded, label: 'Inicio'),
     PillNavItem(icon: Icons.trending_up, label: 'Ingresos'),
+    PillNavItem(icon: Icons.more_horiz, label: 'Más'),
   ];
 
   @override
@@ -45,9 +49,13 @@ class _RootShellState extends State<RootShell> {
               onTap: (i) => setState(() => _indice = i),
               theme: PillNavBarTheme(
                 activeColor: Theme.of(context).colorScheme.primary,
-                inactiveColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                inactiveColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
                 activeIconColor: Theme.of(context).colorScheme.onPrimary,
-                inactiveIconColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                inactiveIconColor: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant,
               ),
             ),
           ),
