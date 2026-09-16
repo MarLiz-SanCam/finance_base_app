@@ -1,30 +1,42 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-
+import 'package:drift/native.dart';
+import 'package:finance_base_app/data/db/app_database.dart';
 import 'package:finance_base_app/main.dart';
+import 'package:finance_base_app/providers/database_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('La app arranca y muestra la barra de navegación inferior', (
+    WidgetTester tester,
+  ) async {
+    // Los gráficos usan DateFormat(..., 'es_MX'); sin esto lanzan
+    // LocaleDataException al construirse.
+    await initializeDateFormatting('es_MX');
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // BD en memoria: en `flutter test` no hay canales de plataforma para
+    // resolver el directorio de documentos real. Se cierra explícitamente
+    // dentro del test (ver abajo) en vez de dejar que la desconexión
+    // automática de ProviderScope la cierre al final: `close()` programa un
+    // Timer interno de limpieza que necesita un `pump` para disparar antes
+    // de que el framework de pruebas verifique que no quedan timers vivos.
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: const MyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // IndexedStack mantiene las tres páginas montadas a la vez, así que
+    // cada título aparece tanto en el dashboard como en la barra inferior.
+    expect(find.text('Inicio'), findsWidgets);
+    expect(find.text('Egresos'), findsWidgets);
+    expect(find.text('Ingresos'), findsWidgets);
+
+    await db.close();
+    await tester.pump(Duration.zero);
   });
 }
