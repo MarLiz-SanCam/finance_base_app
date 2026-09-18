@@ -23,6 +23,14 @@ import 'obligations_table.dart';
 /// cuando la transacción es el pago/cobro (o la promesa de pago) de una
 /// obligación. Ver [Accounts] para el porqué de `id` (UUID) y las columnas
 /// de sincronización.
+///
+/// `type = transferencia` es la excepción a todo lo anterior: mueve plata
+/// entre dos cuentas propias (retiro de cajero, pago de tarjeta de crédito
+/// desde débito) sin ser gasto ni ingreso real. En ese caso `account_id` es
+/// la cuenta de origen, `destination_account_id` la de destino, y
+/// `category_id` queda en NULL (no hay nada que categorizar). Para
+/// `ingreso`/`gasto`, `destination_account_id` siempre es NULL y
+/// `category_id` es obligatoria a nivel de repositorio.
 class Transactions extends Table {
   TextColumn get id => text()();
   TextColumn get userId => text()();
@@ -37,7 +45,10 @@ class Transactions extends Table {
       )();
 
   TextColumn get accountId => text().references(Accounts, #id)();
-  TextColumn get categoryId => text().references(Categories, #id)();
+  TextColumn get destinationAccountId =>
+      text().nullable().references(Accounts, #id)();
+  TextColumn get categoryId =>
+      text().nullable().references(Categories, #id)();
   TextColumn get obligationId => text()
       .nullable()
       .references(Obligations, #id, onDelete: KeyAction.setNull)();

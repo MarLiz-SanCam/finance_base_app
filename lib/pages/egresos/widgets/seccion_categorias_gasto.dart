@@ -51,10 +51,7 @@ class _ListaCategorias extends StatelessWidget {
         Text(titulo, style: theme.textTheme.titleSmall),
         const SizedBox(height: 8),
         if (categorias.isEmpty)
-          Text(
-            'Sin categorías registradas',
-            style: theme.textTheme.bodySmall,
-          )
+          Text('Sin categorías registradas', style: theme.textTheme.bodySmall)
         else
           SizedBox(
             height: 88,

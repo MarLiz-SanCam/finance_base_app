@@ -8,7 +8,12 @@ import 'local_identity_repository.dart';
 import 'obligations_repository.dart';
 
 class TransactionsRepository {
-  TransactionsRepository(this._db, this._accounts, this._obligations, this._identity);
+  TransactionsRepository(
+    this._db,
+    this._accounts,
+    this._obligations,
+    this._identity,
+  );
 
   final AppDatabase _db;
   final AccountsRepository _accounts;
@@ -79,7 +84,10 @@ class TransactionsRepository {
   /// Verifica que el tipo de la categoría (ingreso/gasto) coincida con el
   /// tipo de la transacción, para no registrar p.ej. un gasto contra una
   /// categoría de ingresos.
-  Future<void> _validarCategoria(String categoryId, TransactionType type) async {
+  Future<void> _validarCategoria(
+    String categoryId,
+    TransactionType type,
+  ) async {
     final categoria = await (_db.select(
       _db.categories,
     )..where((c) => c.id.equals(categoryId))).getSingle();
@@ -112,22 +120,24 @@ class TransactionsRepository {
     final ahora = DateTime.now();
 
     await _db.transaction(() async {
-      await _db.into(_db.transactions).insert(
-        TransactionsCompanion.insert(
-          id: id,
-          userId: userId,
-          concept: concept,
-          amount: amountCentavos,
-          dueDate: fecha,
-          paymentDate: Value(fecha),
-          type: type,
-          status: const Value(TransactionStatus.pagado),
-          accountId: accountId,
-          categoryId: categoryId,
-          createdAt: Value(ahora),
-          updatedAt: Value(ahora),
-        ),
-      );
+      await _db
+          .into(_db.transactions)
+          .insert(
+            TransactionsCompanion.insert(
+              id: id,
+              userId: userId,
+              concept: concept,
+              amount: amountCentavos,
+              dueDate: fecha,
+              paymentDate: Value(fecha),
+              type: type,
+              status: const Value(TransactionStatus.pagado),
+              accountId: accountId,
+              categoryId: Value(categoryId),
+              createdAt: Value(ahora),
+              updatedAt: Value(ahora),
+            ),
+          );
       await _accounts.applyDelta(accountId, _delta(type, amountCentavos));
     });
     return id;
@@ -137,7 +147,17 @@ class TransactionsRepository {
   /// obligaciones): pasa a `pagado`, fija `payment_date` y recién entonces
   /// afecta el saldo. Si está vinculada a una obligación progresiva que
   /// llega a saldo 0, la marca finalizada.
-  Future<void> confirmarPago(String transactionId, {DateTime? fecha}) async {
+  ///
+  /// [montoCentavos] es obligatorio cuando la pendiente no traía un monto
+  /// fijo (obligación sin `amount_per_period`, generada con `amount = 0` —
+  /// ej. la luz, que varía cada recibo): no se puede confirmar un pago de
+  /// $0. Si la pendiente ya traía un monto, [montoCentavos] es opcional y,
+  /// si se manda, lo sobreescribe (por si igual varió un poco).
+  Future<void> confirmarPago(
+    String transactionId, {
+    DateTime? fecha,
+    int? montoCentavos,
+  }) async {
     await _db.transaction(() async {
       final transaccion = await (_db.select(
         _db.transactions,
@@ -149,10 +169,17 @@ class TransactionsRepository {
         );
       }
 
+      final montoFinal = montoCentavos ?? transaccion.amount;
+      if (montoFinal <= 0) {
+        throw ArgumentError('Indica el monto antes de confirmar el pago.');
+      }
+
       final fechaPago = fecha ?? DateTime.now();
-      await (_db.update(_db.transactions)..where((t) => t.id.equals(transactionId)))
-          .write(
+      await (_db.update(
+        _db.transactions,
+      )..where((t) => t.id.equals(transactionId))).write(
         TransactionsCompanion(
+          amount: Value(montoFinal),
           status: const Value(TransactionStatus.pagado),
           paymentDate: Value(fechaPago),
           updatedAt: Value(DateTime.now()),
@@ -160,7 +187,7 @@ class TransactionsRepository {
       );
       await _accounts.applyDelta(
         transaccion.accountId,
-        _delta(transaccion.type, transaccion.amount),
+        _delta(transaccion.type, montoFinal),
       );
 
       final obligationId = transaccion.obligationId;
@@ -168,6 +195,53 @@ class TransactionsRepository {
         await _obligations.finalizarSiCorresponde(obligationId);
       }
     });
+  }
+
+  /// Mueve dinero entre dos cuentas propias (retiro de cajero, pago de
+  /// tarjeta de crédito desde débito): no es gasto ni ingreso real, así que
+  /// nace directamente `pagado`, sin `category_id`, y afecta ambas cuentas
+  /// de forma atómica ([accountId] resta, [cuentaDestinoId] suma).
+  Future<String> transferir({
+    required String concept,
+    required int amountCentavos,
+    required DateTime fecha,
+    required String cuentaOrigenId,
+    required String cuentaDestinoId,
+  }) async {
+    if (amountCentavos <= 0) {
+      throw ArgumentError('El monto debe ser mayor a cero.');
+    }
+    if (cuentaOrigenId == cuentaDestinoId) {
+      throw ArgumentError('La cuenta de origen y destino no pueden ser la misma.');
+    }
+
+    final id = const Uuid().v7();
+    final userId = await _identity.obtenerUserId();
+    final ahora = DateTime.now();
+
+    await _db.transaction(() async {
+      await _db
+          .into(_db.transactions)
+          .insert(
+            TransactionsCompanion.insert(
+              id: id,
+              userId: userId,
+              concept: concept,
+              amount: amountCentavos,
+              dueDate: fecha,
+              paymentDate: Value(fecha),
+              type: TransactionType.transferencia,
+              status: const Value(TransactionStatus.pagado),
+              accountId: cuentaOrigenId,
+              destinationAccountId: Value(cuentaDestinoId),
+              createdAt: Value(ahora),
+              updatedAt: Value(ahora),
+            ),
+          );
+      await _accounts.applyDelta(cuentaOrigenId, -amountCentavos);
+      await _accounts.applyDelta(cuentaDestinoId, amountCentavos);
+    });
+    return id;
   }
 
   /// Descarta una transacción `pendiente` sin pagarla (p.ej. "este mes no
@@ -183,8 +257,9 @@ class TransactionsRepository {
         '${transaccion.status.name}).',
       );
     }
-    await (_db.update(_db.transactions)..where((t) => t.id.equals(transactionId)))
-        .write(
+    await (_db.update(
+      _db.transactions,
+    )..where((t) => t.id.equals(transactionId))).write(
       TransactionsCompanion(
         status: const Value(TransactionStatus.cancelado),
         updatedAt: Value(DateTime.now()),
@@ -215,8 +290,7 @@ class TransactionsRepository {
         _db.transactions,
       )..where((t) => t.id.equals(id))).getSingle();
 
-      await (_db.update(_db.transactions)..where((t) => t.id.equals(id)))
-          .write(
+      await (_db.update(_db.transactions)..where((t) => t.id.equals(id))).write(
         TransactionsCompanion(
           concept: Value(concept),
           amount: Value(amountCentavos),
@@ -250,16 +324,23 @@ class TransactionsRepository {
       )..where((t) => t.id.equals(id))).getSingle();
 
       final ahora = DateTime.now();
-      await (_db.update(_db.transactions)..where((t) => t.id.equals(id)))
-          .write(
+      await (_db.update(_db.transactions)..where((t) => t.id.equals(id))).write(
         TransactionsCompanion(deletedAt: Value(ahora), updatedAt: Value(ahora)),
       );
 
       if (transaccion.status == TransactionStatus.pagado) {
-        await _accounts.applyDelta(
-          transaccion.accountId,
-          -_delta(transaccion.type, transaccion.amount),
-        );
+        if (transaccion.type == TransactionType.transferencia) {
+          await _accounts.applyDelta(transaccion.accountId, transaccion.amount);
+          await _accounts.applyDelta(
+            transaccion.destinationAccountId!,
+            -transaccion.amount,
+          );
+        } else {
+          await _accounts.applyDelta(
+            transaccion.accountId,
+            -_delta(transaccion.type, transaccion.amount),
+          );
+        }
       }
     });
   }
@@ -332,4 +413,49 @@ class TransactionsRepository {
     }
     return totales;
   }
+
+  /// Gastos pagados en `[desde, hasta)`, junto con el tipo de la obligación
+  /// que los originó (`null` si es un gasto variable sin obligación). Base
+  /// del desglose de egresos por grupo (fijo/progresivo/variable).
+  Future<List<GastoConOrigen>> gastosConOrigenEnRango({
+    required DateTime desde,
+    required DateTime hasta,
+  }) async {
+    final query =
+        _db.select(_db.transactions).join([
+            leftOuterJoin(
+              _db.obligations,
+              _db.obligations.id.equalsExp(_db.transactions.obligationId),
+            ),
+          ])
+          ..where(
+            _db.transactions.type.equalsValue(TransactionType.gasto) &
+                _db.transactions.status.equalsValue(TransactionStatus.pagado) &
+                _db.transactions.deletedAt.isNull() &
+                _db.transactions.paymentDate.isBiggerOrEqualValue(desde) &
+                _db.transactions.paymentDate.isSmallerThanValue(hasta),
+          )
+          ..orderBy([OrderingTerm.desc(_db.transactions.paymentDate)]);
+
+    final filas = await query.get();
+    return [
+      for (final fila in filas)
+        GastoConOrigen(
+          transaccion: fila.readTable(_db.transactions),
+          tipoObligacion: fila.readTableOrNull(_db.obligations)?.type,
+        ),
+    ];
+  }
+}
+
+/// Un gasto pagado junto con el tipo de la obligación que lo originó
+/// (`null` si es un gasto variable, sin obligación asociada).
+class GastoConOrigen {
+  const GastoConOrigen({
+    required this.transaccion,
+    required this.tipoObligacion,
+  });
+
+  final Transaction transaccion;
+  final ObligationType? tipoObligacion;
 }

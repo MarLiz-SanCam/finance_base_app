@@ -35,9 +35,9 @@ class GraficoGastos extends ConsumerWidget {
               ],
               selected: {modo},
               showSelectedIcon: false,
-              onSelectionChanged: (seleccion) => ref
-                  .read(egresosChartModeProvider.notifier)
-                  .state = seleccion.first,
+              onSelectionChanged: (seleccion) =>
+                  ref.read(egresosChartModeProvider.notifier).state =
+                      seleccion.first,
             ),
           ],
         ),
@@ -77,8 +77,18 @@ class _LineaAnual extends ConsumerWidget {
   const _LineaAnual();
 
   static const _mesesCorto = [
-    'E', 'F', 'M', 'A', 'M', 'J',
-    'J', 'A', 'S', 'O', 'N', 'D',
+    'E',
+    'F',
+    'M',
+    'A',
+    'M',
+    'J',
+    'J',
+    'A',
+    'S',
+    'O',
+    'N',
+    'D',
   ];
 
   @override

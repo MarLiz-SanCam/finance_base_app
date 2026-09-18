@@ -29,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -38,9 +38,14 @@ class AppDatabase extends _$AppDatabase {
       // v1 -> v2: IDs pasan de INTEGER autoincrement a UUID, se agregan
       // columnas de sincronización (user_id/updated_at/deleted_at) y el
       // motor de obligaciones (status/due_date/payment_date en
-      // transactions, last_generated_date en obligations). Sin usuarios
-      // reales todavía, se recrea el esquema en vez de migrar datos de
-      // desarrollo.
+      // transactions, last_generated_date en obligations).
+      // v2 -> v3: obligations.amount_per_period pasa a opcional (montos
+      // variables, ej. la luz).
+      // v3 -> v4: nuevo TransactionType.transferencia para movimientos entre
+      // cuentas propias; transactions.category_id pasa a opcional y se
+      // agrega transactions.destination_account_id.
+      // Sin usuarios reales todavía, se recrea el esquema en vez de migrar
+      // datos de desarrollo.
       for (final tabla in ['accounts', 'categories', 'obligations', 'transactions']) {
         await m.deleteTable(tabla);
       }

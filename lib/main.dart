@@ -11,14 +11,12 @@ void main() async {
   // GraficoBalance); sin esto, `DateFormat(..., 'es_MX')` lanza
   // LocaleDataException la primera vez que se usa.
   await initializeDateFormatting('es_MX');
-
   final container = ProviderContainer();
   // El motor de obligaciones (genera las transacciones `pendiente` de las
   // obligaciones activas hasta el horizonte por defecto). No hay tareas en
   // background reales en una app local: se ejecuta una vez al iniciar,
   // antes de construir la UI, para que "próximos a vencer" ya tenga datos.
   await container.read(obligationsRepositoryProvider).generarPagosPendientes();
-
   runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
@@ -29,7 +27,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Finanzas',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
       home: const RootShell(),
     );
   }

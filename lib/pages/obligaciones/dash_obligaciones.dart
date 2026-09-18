@@ -131,7 +131,7 @@ class _ObligacionTile extends ConsumerWidget {
             Text(
               '${_etiquetasTipo[obligacion.type]} · '
               '${_etiquetasFrecuencia[obligacion.frequency]} · '
-              '${Money.centavosAPesos(obligacion.amountPerPeriod)}',
+              '${obligacion.amountPerPeriod == null ? "Monto variable" : Money.centavosAPesos(obligacion.amountPerPeriod!)}',
             ),
             Row(
               children: [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'widgets/card_gastos_realizados.dart';
 import 'widgets/card_proximos_a_vencer.dart';
+import 'widgets/fila_desglose_gastos.dart';
 import 'widgets/grafico_gastos.dart';
 import 'widgets/header_resumen_egresos.dart';
 import 'widgets/seccion_categorias_gasto.dart';
@@ -30,6 +31,8 @@ class DashEgresosPage extends StatelessWidget {
                   Expanded(child: CardGastosRealizados()),
                 ],
               ),
+              SizedBox(height: 24),
+              FilaDesgloseGastos(),
               SizedBox(height: 24),
               SeccionCategoriasGasto(),
               SizedBox(height: 24),

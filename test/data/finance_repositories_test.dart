@@ -417,6 +417,63 @@ void main() {
       expect(historial.where((t) => t.status == TransactionStatus.cancelado).length, 1);
     });
 
+    test('obligación sin monto fijo genera pendientes en 0 y exige monto al confirmar', () async {
+      final cuentaId = await accounts.crear(name: 'Débito', type: AccountType.debito);
+      final categoriaId = await categories.crear(name: 'Servicios', type: CategoryType.gasto);
+      await obligations.crear(
+        concept: 'CFE',
+        categoryId: categoriaId,
+        accountId: cuentaId,
+        type: ObligationType.gastoFijo,
+        frequency: ObligationFrequency.mensual,
+        // Sin amountPerPeriodCentavos: varía cada recibo.
+        paymentDay: 10,
+        startDate: DateTime(2026, 9, 1),
+      );
+
+      await obligations.generarPagosPendientes(horizonte: DateTime(2026, 9, 16));
+      final pendiente = (await transactions.watchPendientes().first).single;
+      expect(pendiente.amount, 0);
+
+      // No se puede confirmar sin indicar el monto real.
+      expect(
+        () => transactions.confirmarPago(pendiente.id, fecha: DateTime(2026, 9, 10)),
+        throwsArgumentError,
+      );
+
+      await transactions.confirmarPago(
+        pendiente.id,
+        fecha: DateTime(2026, 9, 10),
+        montoCentavos: 45000,
+      );
+
+      expect((await accounts.obtener(cuentaId)).currentBalance, -45000);
+      final confirmada = await (db.select(db.transactions)..where((t) => t.id.equals(pendiente.id))).getSingle();
+      expect(confirmada.amount, 45000);
+      expect(confirmada.status, TransactionStatus.pagado);
+    });
+
+    test('confirmarPago con monto fijo permite sobreescribirlo si varió un poco', () async {
+      final cuentaId = await accounts.crear(name: 'Débito', type: AccountType.debito);
+      final categoriaId = await categories.crear(name: 'Servicios', type: CategoryType.gasto);
+      await obligations.crear(
+        concept: 'Internet',
+        categoryId: categoriaId,
+        accountId: cuentaId,
+        type: ObligationType.gastoFijo,
+        frequency: ObligationFrequency.mensual,
+        amountPerPeriodCentavos: 60000,
+        paymentDay: 10,
+        startDate: DateTime(2026, 9, 1),
+      );
+      await obligations.generarPagosPendientes(horizonte: DateTime(2026, 9, 16));
+      final pendiente = (await transactions.watchPendientes().first).single;
+
+      // Sin monto explícito, confirma con el que ya traía la pendiente.
+      await transactions.confirmarPago(pendiente.id, fecha: DateTime(2026, 9, 10));
+      expect((await accounts.obtener(cuentaId)).currentBalance, -60000);
+    });
+
     test('gastadoEnElMes no cuenta transacciones todavía pendientes', () async {
       final cuentaId = await accounts.crear(name: 'Débito', type: AccountType.debito);
       final categoriaId = await categories.crear(
@@ -442,6 +499,114 @@ void main() {
       await transactions.confirmarPago(pendiente.id, fecha: DateTime(2026, 9, 10));
 
       expect(await categories.gastadoEnElMes(categoriaId, fecha: DateTime(2026, 9, 20)), 60000);
+    });
+
+    test('transferir mueve el saldo de una cuenta a otra sin categoría', () async {
+      final tdd = await accounts.crear(
+        name: 'TDD',
+        type: AccountType.debito,
+        saldoInicialCentavos: 100000,
+      );
+      final efectivo = await accounts.crear(
+        name: 'Efectivo',
+        type: AccountType.efectivo,
+      );
+
+      final id = await transactions.transferir(
+        concept: 'Retiro cajero',
+        amountCentavos: 30000,
+        fecha: DateTime(2026, 9, 5),
+        cuentaOrigenId: tdd,
+        cuentaDestinoId: efectivo,
+      );
+
+      expect((await accounts.obtener(tdd)).currentBalance, 70000);
+      expect((await accounts.obtener(efectivo)).currentBalance, 30000);
+
+      final fila = await (db.select(db.transactions)..where((t) => t.id.equals(id))).getSingle();
+      expect(fila.type, TransactionType.transferencia);
+      expect(fila.status, TransactionStatus.pagado);
+      expect(fila.categoryId, isNull);
+      expect(fila.destinationAccountId, efectivo);
+    });
+
+    test('transferir rechaza origen y destino iguales', () async {
+      final tdd = await accounts.crear(name: 'TDD', type: AccountType.debito);
+
+      expect(
+        () => transactions.transferir(
+          concept: 'Transferencia inválida',
+          amountCentavos: 1000,
+          fecha: DateTime(2026, 9, 5),
+          cuentaOrigenId: tdd,
+          cuentaDestinoId: tdd,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('eliminar una transferencia revierte el saldo de ambas cuentas', () async {
+      final tdd = await accounts.crear(
+        name: 'TDD',
+        type: AccountType.debito,
+        saldoInicialCentavos: 100000,
+      );
+      final tdc = await accounts.crear(name: 'TDC', type: AccountType.credito);
+
+      final id = await transactions.transferir(
+        concept: 'Pago tarjeta de crédito',
+        amountCentavos: 40000,
+        fecha: DateTime(2026, 9, 5),
+        cuentaOrigenId: tdd,
+        cuentaDestinoId: tdc,
+      );
+
+      await transactions.eliminar(id);
+
+      expect((await accounts.obtener(tdd)).currentBalance, 100000);
+      expect((await accounts.obtener(tdc)).currentBalance, 0);
+    });
+
+    test('una transferencia no cuenta como gasto ni ingreso', () async {
+      final tdd = await accounts.crear(
+        name: 'TDD',
+        type: AccountType.debito,
+        saldoInicialCentavos: 100000,
+      );
+      final efectivo = await accounts.crear(name: 'Efectivo', type: AccountType.efectivo);
+
+      await transactions.transferir(
+        concept: 'Retiro cajero',
+        amountCentavos: 20000,
+        fecha: DateTime(2026, 9, 5),
+        cuentaOrigenId: tdd,
+        cuentaDestinoId: efectivo,
+      );
+
+      expect(await transactions.watchByType(TransactionType.gasto).first, isEmpty);
+      expect(await transactions.watchByType(TransactionType.ingreso).first, isEmpty);
+    });
+
+    test('no se puede eliminar una cuenta que es destino de una transferencia', () async {
+      final tdd = await accounts.crear(
+        name: 'TDD',
+        type: AccountType.debito,
+        saldoInicialCentavos: 100000,
+      );
+      final efectivo = await accounts.crear(name: 'Efectivo', type: AccountType.efectivo);
+
+      await transactions.transferir(
+        concept: 'Retiro cajero',
+        amountCentavos: 20000,
+        fecha: DateTime(2026, 9, 5),
+        cuentaOrigenId: tdd,
+        cuentaDestinoId: efectivo,
+      );
+
+      expect(
+        () => accounts.eliminar(efectivo),
+        throwsA(isA<RegistroEnUsoException>()),
+      );
     });
   });
 }

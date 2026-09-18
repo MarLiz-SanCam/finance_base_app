@@ -5,6 +5,7 @@ import '../../core/money.dart';
 import '../../data/db/app_database.dart';
 import '../../providers/accounts_providers.dart';
 import 'form_cuenta.dart';
+import 'form_transferencia.dart';
 
 const _etiquetasTipo = {
   'efectivo': 'Efectivo',
@@ -31,7 +32,18 @@ class DashCuentasPage extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Cuentas')),
+      appBar: AppBar(
+        title: const Text('Cuentas'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Transferir entre cuentas',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const FormTransferenciaPage()),
+            ),
+          ),
+        ],
+      ),
       body: cuentasAsync.when(
         data: (cuentas) {
           if (cuentas.isEmpty) {

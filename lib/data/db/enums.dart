@@ -19,8 +19,11 @@ enum ObligationFrequency { mensual, quincenal, semanal, anual }
 enum ObligationStatus { activo, finalizado, pausado }
 
 /// Tipo de transacción. Equivale a `transactions.type`
-/// ('INGRESO', 'GASTO').
-enum TransactionType { ingreso, gasto }
+/// ('INGRESO', 'GASTO', 'TRANSFERENCIA'). `transferencia` es un movimiento
+/// entre dos cuentas propias (retiro de cajero, pago de tarjeta de crédito
+/// desde débito): no es gasto ni ingreso real, así que queda afuera de
+/// cualquier reporte que sume por esos dos tipos.
+enum TransactionType { ingreso, gasto, transferencia }
 
 /// Estado de una transacción. 'pendiente' = generada por el motor de
 /// obligaciones pero aún no confirmada (no afecta el saldo). 'pagado' =

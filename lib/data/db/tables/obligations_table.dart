@@ -27,7 +27,15 @@ class Obligations extends Table {
       text().nullable().references(Accounts, #id)();
   TextColumn get type => textEnum<ObligationType>()();
   TextColumn get frequency => textEnum<ObligationFrequency>()();
-  IntColumn get amountPerPeriod => integer()();
+
+  /// Monto por periodo, en centavos. Opcional: si la obligación no tiene un
+  /// monto fijo (ej. la luz, que varía cada recibo), se deja en blanco. El
+  /// motor genera la transacción `pendiente` correspondiente con `amount =
+  /// 0` como marca de "todavía no se sabe cuánto es" — 0 nunca ocurre en
+  /// una transacción real, así que es inequívoco — y
+  /// `TransactionsRepository.confirmarPago` exige que se indique el monto
+  /// real antes de poder confirmarla.
+  IntColumn get amountPerPeriod => integer().nullable()();
 
   /// Día del mes (1-31) en que se paga. Para frecuencia `semanal` se
   /// interpreta como día ISO de la semana (1=lunes..7=domingo). Para

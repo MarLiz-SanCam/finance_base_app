@@ -88,7 +88,10 @@ class AccountsRepository {
     final transaccion =
         await (_db.select(_db.transactions)
               ..where(
-                (t) => t.accountId.equals(accountId) & t.deletedAt.isNull(),
+                (t) =>
+                    (t.accountId.equals(accountId) |
+                        t.destinationAccountId.equals(accountId)) &
+                    t.deletedAt.isNull(),
               )
               ..limit(1))
             .getSingleOrNull();

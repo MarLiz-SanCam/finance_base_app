@@ -52,9 +52,7 @@ class _FormEgresoPageState extends ConsumerState<FormEgresoPage> {
     if (!_formKey.currentState!.validate()) return;
     if (_cuentaId == null || _categoriaId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona una cuenta y una categoría.'),
-        ),
+        const SnackBar(content: Text('Selecciona una cuenta y una categoría.')),
       );
       return;
     }
@@ -155,9 +153,7 @@ class _FormEgresoPageState extends ConsumerState<FormEgresoPage> {
                 cuentas.when(
                   data: (lista) {
                     if (lista.isEmpty) {
-                      return const Text(
-                        'No hay cuentas registradas todavía.',
-                      );
+                      return const Text('No hay cuentas registradas todavía.');
                     }
                     _cuentaId ??= lista.first.id;
                     return DropdownButtonFormField<String>(
@@ -187,9 +183,7 @@ class _FormEgresoPageState extends ConsumerState<FormEgresoPage> {
                     _categoriaId ??= lista.first.id;
                     return DropdownButtonFormField<String>(
                       initialValue: _categoriaId,
-                      decoration: const InputDecoration(
-                        labelText: 'Categoría',
-                      ),
+                      decoration: const InputDecoration(labelText: 'Categoría'),
                       items: [
                         for (final categoria in lista)
                           DropdownMenuItem(

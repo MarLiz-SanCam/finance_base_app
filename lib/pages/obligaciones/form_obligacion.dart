@@ -52,9 +52,9 @@ class _FormObligacionPageState extends ConsumerState<FormObligacionPage> {
     text: widget.obligacionExistente?.concept,
   );
   late final _montoController = TextEditingController(
-    text: widget.obligacionExistente == null
+    text: widget.obligacionExistente?.amountPerPeriod == null
         ? ''
-        : (widget.obligacionExistente!.amountPerPeriod / 100).toStringAsFixed(
+        : (widget.obligacionExistente!.amountPerPeriod! / 100).toStringAsFixed(
             2,
           ),
   );
@@ -143,7 +143,10 @@ class _FormObligacionPageState extends ConsumerState<FormObligacionPage> {
     setState(() => _guardando = true);
     try {
       final repo = ref.read(obligationsRepositoryProvider);
-      final montoCentavos = Money.pesosACentavos(_montoController.text);
+      final montoTexto = _montoController.text.trim();
+      final montoCentavos = montoTexto.isEmpty
+          ? null
+          : Money.pesosACentavos(montoTexto);
       final totalCentavos = _esProgresivo
           ? Money.pesosACentavos(_totalController.text)
           : null;
@@ -369,9 +372,13 @@ class _FormObligacionPageState extends ConsumerState<FormObligacionPage> {
                   controller: _montoController,
                   decoration: InputDecoration(
                     labelText: _esProgresivo
-                        ? 'Cuota por periodo'
-                        : 'Monto por periodo',
+                        ? 'Cuota por periodo (opcional)'
+                        : 'Monto por periodo (opcional)',
                     prefixText: r'$ ',
+                    helperText: 'Déjalo vacío si varía cada vez (ej. luz, '
+                        'agua). Se pedirá el monto real al confirmar cada '
+                        'pago.',
+                    helperMaxLines: 2,
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -380,11 +387,10 @@ class _FormObligacionPageState extends ConsumerState<FormObligacionPage> {
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                   ],
                   validator: (valor) {
-                    if (valor == null || valor.trim().isEmpty) {
-                      return 'El monto es obligatorio.';
-                    }
+                    final texto = (valor ?? '').trim();
+                    if (texto.isEmpty) return null;
                     try {
-                      if (Money.pesosACentavos(valor) <= 0) {
+                      if (Money.pesosACentavos(texto) <= 0) {
                         return 'El monto debe ser mayor a cero.';
                       }
                     } on FormatException {
