@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:nav_bar_circles/nav_bar_circles.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
+import '../core/components/bottomNavBar.dart';
 import 'egresos/dash_egresos.dart';
 import 'home.dart';
 import 'ingresos/dash_ingresos.dart';
-import 'mas/mas_page.dart';
 
-/// Cascarón de navegación: Egresos, Inicio, Ingresos y Más, con una barra
-/// inferior de círculos. El orden de [_paginas] e [_items] deja Inicio en
-/// el índice central entre Egresos e Ingresos, con Más al final (agrupa
-/// Cuentas, Categorías y Obligaciones).
+/// Cascarón de navegación: Egresos, Inicio e Ingresos, con una barra
+/// inferior donde el ítem activo se expande a píldora con etiqueta. Cuentas,
+/// Categorías y Obligaciones ya no viven en un tab "Más": se acceden desde
+/// los 3 botones circulares del AppBar de cada dashboard
+/// ([AppMainAppBar]).
 class RootShell extends StatefulWidget {
   const RootShell({super.key});
 
@@ -24,14 +25,12 @@ class _RootShellState extends State<RootShell> {
     DashEgresosPage(),
     HomePage(),
     DashIngresosPage(),
-    MasPage(),
   ];
 
-  static const _items = [
-    PillNavItem(icon: Icons.trending_down, label: 'Egresos'),
-    PillNavItem(icon: Icons.home_rounded, label: 'Inicio'),
-    PillNavItem(icon: Icons.trending_up, label: 'Ingresos'),
-    PillNavItem(icon: Icons.more_horiz, label: 'Más'),
+  static final  _items = [
+    AppBottomNavItem(icon: Icons.trending_down, label: 'Egresos'),
+    AppBottomNavItem(icon: MdiIcons.finance, label: 'Inicio'),
+    AppBottomNavItem(icon: Icons.trending_up, label: 'Ingresos'),
   ];
 
   @override
@@ -43,20 +42,10 @@ class _RootShellState extends State<RootShell> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Center(
             heightFactor: 1,
-            child: PillNavBar(
+            child: AppBottomNavBar(
               items: _items,
               currentIndex: _indice,
               onTap: (i) => setState(() => _indice = i),
-              theme: PillNavBarTheme(
-                activeColor: Theme.of(context).colorScheme.primary,
-                inactiveColor: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest,
-                activeIconColor: Theme.of(context).colorScheme.onPrimary,
-                inactiveIconColor: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant,
-              ),
             ),
           ),
         ),

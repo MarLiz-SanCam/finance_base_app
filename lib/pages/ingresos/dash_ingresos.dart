@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/components/appBar.dart';
 import 'form_ingresos.dart';
 import 'widgets/grafico_ingresos.dart';
 import 'widgets/resumen_ingresos_row.dart';
@@ -19,19 +20,13 @@ class DashIngresosPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const AppMainAppBar(title: 'Ingresos'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Ingresos',
-                style: Theme.of(
-                  context,
-                ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
               ResumenIngresosRow(
                 onAgregar: () => _abrirFormulario(context),
               ),

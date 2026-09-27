@@ -6,8 +6,8 @@ import '../../../core/periodo_quincenal.dart';
 import '../../../providers/egresos_dashboard_providers.dart';
 import '../form_egresos.dart';
 
-/// Título del dashboard + monto gastado en la quincena actual + acceso
-/// rápido para registrar un gasto nuevo.
+/// Monto gastado en la quincena actual + acceso rápido para registrar un
+/// gasto nuevo.
 class HeaderResumenEgresos extends ConsumerWidget {
   const HeaderResumenEgresos({super.key});
 
@@ -20,13 +20,6 @@ class HeaderResumenEgresos extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Egresos',
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

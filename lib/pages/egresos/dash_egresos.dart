@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/components/appBar.dart';
 import 'widgets/card_gastos_realizados.dart';
 import 'widgets/card_proximos_a_vencer.dart';
 import 'widgets/fila_desglose_gastos.dart';
@@ -7,14 +8,15 @@ import 'widgets/grafico_gastos.dart';
 import 'widgets/header_resumen_egresos.dart';
 import 'widgets/seccion_categorias_gasto.dart';
 
-/// Dashboard de egresos: sin AppBar, el título vive dentro del body junto
-/// con el resumen del período y el acceso rápido para registrar un gasto.
+/// Dashboard de egresos: el resumen del período y el acceso rápido para
+/// registrar un gasto viven en el body, debajo del AppBar compartido.
 class DashEgresosPage extends StatelessWidget {
   const DashEgresosPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const AppMainAppBar(title: 'Egresos'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),

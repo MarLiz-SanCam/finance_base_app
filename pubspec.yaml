@@ -41,8 +41,8 @@ dependencies:
   intl: ^0.20.3
   drift_flutter: ^0.3.1
   fl_chart: ^1.2.0
-  nav_bar_circles: ^0.0.1
   uuid: ^4.6.0
+  material_design_icons_flutter: ^7.0.7296
 
 dev_dependencies:
   flutter_test:

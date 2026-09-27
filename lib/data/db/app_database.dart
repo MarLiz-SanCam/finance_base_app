@@ -29,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,6 +44,12 @@ class AppDatabase extends _$AppDatabase {
       // v3 -> v4: nuevo TransactionType.transferencia para movimientos entre
       // cuentas propias; transactions.category_id pasa a opcional y se
       // agrega transactions.destination_account_id.
+      // v4 -> v5: algunas instalaciones de desarrollo quedaron con
+      // user_version = 4 pero sin destination_account_id (la migración
+      // 3->4 no llegó a correr antes de que se agregara la columna), lo
+      // que rompía cualquier SELECT sobre transactions con "no such
+      // column: transactions.destination_account_id". Se vuelve a forzar
+      // la recreación para dejar el esquema real al día.
       // Sin usuarios reales todavía, se recrea el esquema en vez de migrar
       // datos de desarrollo.
       for (final tabla in ['accounts', 'categories', 'obligations', 'transactions']) {
