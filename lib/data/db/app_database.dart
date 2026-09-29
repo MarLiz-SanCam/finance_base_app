@@ -29,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -50,6 +50,14 @@ class AppDatabase extends _$AppDatabase {
       // que rompía cualquier SELECT sobre transactions con "no such
       // column: transactions.destination_account_id". Se vuelve a forzar
       // la recreación para dejar el esquema real al día.
+      // v5 -> v6: obligations.payment_day_2 para que las obligaciones
+      // quincenales usen dos fechas de pago elegidas por el usuario en vez
+      // de asumir día 15 y último día de mes; categories.budget_limit pasa
+      // a interpretarse como presupuesto por quincena (antes mensual), sin
+      // cambio de esquema.
+      // v6 -> v7: categories.color (ARGB elegido al crear la categoría),
+      // para que el color de cada categoría sea fijo en vez de asignarse
+      // según el orden de aparición en cada vista.
       // Sin usuarios reales todavía, se recrea el esquema en vez de migrar
       // datos de desarrollo.
       for (final tabla in ['accounts', 'categories', 'obligations', 'transactions']) {

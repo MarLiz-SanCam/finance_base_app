@@ -5,6 +5,7 @@ import '../data/repositories/accounts_repository.dart';
 import '../data/repositories/categories_repository.dart';
 import '../data/repositories/local_identity_repository.dart';
 import '../data/repositories/obligations_repository.dart';
+import '../data/repositories/showcase_progress_repository.dart';
 import '../data/repositories/transactions_repository.dart';
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
@@ -18,6 +19,12 @@ final localIdentityRepositoryProvider = Provider<LocalIdentityRepository>((
 ) {
   return LocalIdentityRepository(ref.watch(appDatabaseProvider));
 });
+
+final showcaseProgressRepositoryProvider = Provider<ShowcaseProgressRepository>(
+  (ref) {
+    return ShowcaseProgressRepository(ref.watch(appDatabaseProvider));
+  },
+);
 
 final accountsRepositoryProvider = Provider<AccountsRepository>((ref) {
   return AccountsRepository(

@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money.dart';
+import '../../../core/periodo_quincenal.dart';
 import '../../../data/db/enums.dart';
 import '../../../providers/transactions_providers.dart';
 
 /// Row superior del dashboard de ingresos: a la izquierda el total
-/// ingresado en el mes en curso, a la derecha el botón para agregar un
+/// ingresado en la quincena en curso, a la derecha el botón para agregar un
 /// nuevo ingreso.
 class ResumenIngresosRow extends ConsumerWidget {
   const ResumenIngresosRow({super.key, required this.onAgregar});
@@ -18,13 +19,13 @@ class ResumenIngresosRow extends ConsumerWidget {
     final ingresosAsync = ref.watch(
       transactionsByTypeStreamProvider(TransactionType.ingreso),
     );
-    final ahora = DateTime.now();
-    final totalMesCentavos = ingresosAsync.maybeWhen(
+    final periodo = PeriodoQuincenal.actual();
+    final totalQuincenaCentavos = ingresosAsync.maybeWhen(
       data: (ingresos) => ingresos
           .where(
             (t) =>
-                t.paymentDate!.year == ahora.year &&
-                t.paymentDate!.month == ahora.month,
+                !t.paymentDate!.isBefore(periodo.inicio) &&
+                t.paymentDate!.isBefore(periodo.finExclusivo),
           )
           .fold<int>(0, (suma, t) => suma + t.amount),
       orElse: () => 0,
@@ -43,12 +44,12 @@ class ResumenIngresosRow extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Ingresos de este mes',
+                      'Ingresos quincena ${periodo.etiqueta()}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      Money.centavosAPesos(totalMesCentavos),
+                      Money.centavosAPesos(totalQuincenaCentavos),
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),

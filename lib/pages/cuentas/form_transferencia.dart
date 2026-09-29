@@ -51,14 +51,18 @@ class _FormTransferenciaPageState extends ConsumerState<FormTransferenciaPage> {
     if (!_formKey.currentState!.validate()) return;
     if (_cuentaOrigenId == null || _cuentaDestinoId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona la cuenta de origen y destino.')),
+        const SnackBar(
+          content: Text('Selecciona la cuenta de origen y destino.'),
+        ),
       );
       return;
     }
     if (_cuentaOrigenId == _cuentaDestinoId) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La cuenta de origen y destino no pueden ser la misma.'),
+          content: Text(
+            'La cuenta de origen y destino no pueden ser la misma.',
+          ),
         ),
       );
       return;
@@ -106,7 +110,10 @@ class _FormTransferenciaPageState extends ConsumerState<FormTransferenciaPage> {
             }
             _cuentaOrigenId ??= lista.first.id;
             _cuentaDestinoId ??= lista
-                .firstWhere((c) => c.id != _cuentaOrigenId, orElse: () => lista[1])
+                .firstWhere(
+                  (c) => c.id != _cuentaOrigenId,
+                  orElse: () => lista[1],
+                )
                 .id;
 
             return SingleChildScrollView(
@@ -122,7 +129,8 @@ class _FormTransferenciaPageState extends ConsumerState<FormTransferenciaPage> {
                       textCapitalization: TextCapitalization.sentences,
                       decoration: const InputDecoration(
                         labelText: 'Concepto',
-                        hintText: 'Ej. Retiro cajero, pago tarjeta de crédito...',
+                        hintText:
+                            'Ej. Retiro cajero, pago tarjeta de crédito...',
                       ),
                       validator: (valor) {
                         if (valor == null || valor.trim().isEmpty) {
@@ -170,7 +178,9 @@ class _FormTransferenciaPageState extends ConsumerState<FormTransferenciaPage> {
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: _cuentaOrigenId,
-                      decoration: const InputDecoration(labelText: 'Cuenta origen'),
+                      decoration: const InputDecoration(
+                        labelText: 'Cuenta origen',
+                      ),
                       items: [
                         for (final cuenta in lista)
                           DropdownMenuItem(
@@ -184,7 +194,9 @@ class _FormTransferenciaPageState extends ConsumerState<FormTransferenciaPage> {
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       initialValue: _cuentaDestinoId,
-                      decoration: const InputDecoration(labelText: 'Cuenta destino'),
+                      decoration: const InputDecoration(
+                        labelText: 'Cuenta destino',
+                      ),
                       items: [
                         for (final cuenta in lista)
                           DropdownMenuItem(
@@ -204,7 +216,9 @@ class _FormTransferenciaPageState extends ConsumerState<FormTransferenciaPage> {
                             ? const SizedBox(
                                 height: 18,
                                 width: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Guardar transferencia'),
                       ),

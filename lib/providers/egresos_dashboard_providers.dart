@@ -10,17 +10,17 @@ import 'transactions_providers.dart';
 
 /// Vista de una categoría de gasto para el dashboard: si tiene una
 /// obligación fija/progresiva activa asociada ("fija") o no ("variable"),
-/// junto con lo gastado en el mes en curso contra su presupuesto.
+/// junto con lo gastado en la quincena en curso contra su presupuesto.
 class CategoriaGastoResumen {
   const CategoriaGastoResumen({
     required this.category,
     required this.esFija,
-    required this.gastadoEnElMes,
+    required this.gastadoEnLaQuincena,
   });
 
   final Category category;
   final bool esFija;
-  final int gastadoEnElMes;
+  final int gastadoEnLaQuincena;
 }
 
 /// Total gastado (transacciones type=gasto) en la quincena actual.
@@ -45,7 +45,9 @@ final gastosRealizadosQuincenaProvider =
 /// Transacciones `pendiente` de tipo gasto (pagos de obligaciones fijas o
 /// progresivas todavía sin confirmar) —es decir,
 /// [transaccionesPendientesProvider] sin los ingresos fijos—, ya ordenadas
-/// por fecha de vencimiento.
+/// por fecha de vencimiento. Incluye pendientes de cualquier fecha (pasada o
+/// futura); para solo los de la quincena vigente ver
+/// [gastosProximosAVencerQuincenaProvider].
 final gastosProximosAVencerProvider =
     Provider.autoDispose<AsyncValue<List<Transaction>>>((ref) {
       final pendientes = ref.watch(transaccionesPendientesProvider);
@@ -55,9 +57,28 @@ final gastosProximosAVencerProvider =
       );
     });
 
+/// [gastosProximosAVencerProvider] filtrado a los que vencen dentro de la
+/// quincena vigente — la lista que se muestra directamente en Balance >
+/// Gastos ("Programados por vencer"), a diferencia de Pendientes que
+/// muestra todo el histórico sin filtrar por fecha.
+final gastosProximosAVencerQuincenaProvider =
+    Provider.autoDispose<AsyncValue<List<Transaction>>>((ref) {
+      final periodo = PeriodoQuincenal.actual();
+      final pendientes = ref.watch(gastosProximosAVencerProvider);
+      return pendientes.whenData(
+        (lista) => lista
+            .where(
+              (t) =>
+                  !t.dueDate.isBefore(periodo.inicio) &&
+                  t.dueDate.isBefore(periodo.finExclusivo),
+            )
+            .toList(),
+      );
+    });
+
 /// Categorías de gasto marcadas como fijas (tienen una obligación
 /// fija/progresiva activa asociada) o variables, con su avance de
-/// presupuesto en el mes en curso.
+/// presupuesto en la quincena en curso.
 final categoriasGastoResumenProvider =
     FutureProvider.autoDispose<List<CategoriaGastoResumen>>((ref) async {
       final categorias = await ref.watch(
@@ -72,24 +93,41 @@ final categoriasGastoResumenProvider =
           .toSet();
 
       final categoriesRepo = ref.watch(categoriesRepositoryProvider);
+      final periodo = PeriodoQuincenal.actual();
       return Future.wait(
         categorias.map((categoria) async {
-          final gastado = await categoriesRepo.gastadoEnElMes(categoria.id);
+          final gastado = await categoriesRepo.gastadoEnRango(
+            categoria.id,
+            desde: periodo.inicio,
+            hasta: periodo.finExclusivo,
+          );
           return CategoriaGastoResumen(
             category: categoria,
             esFija: categoriasConObligacionFija.contains(categoria.id),
-            gastadoEnElMes: gastado,
+            gastadoEnLaQuincena: gastado,
           );
         }),
       );
     });
 
 /// Modo de agrupación del gráfico de línea del dashboard de egresos.
-enum EgresosChartMode { mensual, anual }
+enum EgresosChartMode { quincenal, mensual, anual }
 
 final egresosChartModeProvider = StateProvider.autoDispose<EgresosChartMode>(
-  (ref) => EgresosChartMode.mensual,
+  (ref) => EgresosChartMode.quincenal,
 );
+
+/// Gasto por día de la quincena en curso, para la vista quincenal del
+/// gráfico.
+final gastoPorDiaDeLaQuincenaProvider = FutureProvider.autoDispose<List<int>>((
+  ref,
+) {
+  ref.watch(transactionsStreamProvider);
+  final periodo = PeriodoQuincenal.actual();
+  return ref
+      .watch(transactionsRepositoryProvider)
+      .gastoPorDiaEnRango(desde: periodo.inicio, hasta: periodo.finExclusivo);
+});
 
 /// Gasto por día del mes en curso, para la vista mensual del gráfico.
 final gastoPorDiaDelMesProvider = FutureProvider.autoDispose<List<int>>((ref) {

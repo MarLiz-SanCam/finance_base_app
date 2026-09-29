@@ -9,8 +9,11 @@ import '../data/db/enums.dart';
 /// explícitas en el esquema:
 /// - `mensual`: una ocurrencia al mes en `payment_day`. Si el mes tiene
 ///   menos días que `payment_day`, se usa el último día del mes.
-/// - `quincenal`: dos ocurrencias al mes, día 15 y último día del mes
-///   (convención de nómina quincenal). `payment_day` se ignora.
+/// - `quincenal`: dos ocurrencias al mes, en `payment_day` y `payment_day2`
+///   (el usuario elige ambas fechas; ya no se asume día 15 y último día de
+///   mes). Si alguno de los dos no cabe en el mes, se recorta al último día,
+///   igual que en `mensual`. Si faltan (datos antiguos), se usa 15 y 30 como
+///   respaldo.
 /// - `semanal`: `payment_day` se interpreta como día ISO de la semana
 ///   (1=lunes .. 7=domingo).
 /// - `anual`: una ocurrencia al año, en el mes/día de `anclaAnual`
@@ -21,6 +24,7 @@ class ObligationSchedule {
   static List<DateTime> ocurrenciasEnRango({
     required ObligationFrequency frequency,
     required int? paymentDay,
+    int? paymentDay2,
     required DateTime desde,
     required DateTime hasta,
     DateTime? anclaAnual,
@@ -31,7 +35,12 @@ class ObligationSchedule {
       case ObligationFrequency.mensual:
         return _ocurrenciasMensuales(paymentDay ?? 1, desde, hasta);
       case ObligationFrequency.quincenal:
-        return _ocurrenciasQuincenales(desde, hasta);
+        return _ocurrenciasQuincenales(
+          paymentDay ?? 15,
+          paymentDay2 ?? 30,
+          desde,
+          hasta,
+        );
       case ObligationFrequency.semanal:
         return _ocurrenciasSemanales(
           paymentDay ?? DateTime.monday,
@@ -72,6 +81,8 @@ class ObligationSchedule {
   }
 
   static List<DateTime> _ocurrenciasQuincenales(
+    int diaA,
+    int diaB,
     DateTime desde,
     DateTime hasta,
   ) {
@@ -79,9 +90,13 @@ class ObligationSchedule {
     var cursor = DateTime(desde.year, desde.month);
     final limite = DateTime(hasta.year, hasta.month);
     while (!cursor.isAfter(limite)) {
-      final dia15 = DateTime(cursor.year, cursor.month, 15);
-      final ultimoDia = _clampDiaDeMes(cursor.year, cursor.month, 31);
-      for (final fecha in [dia15, ultimoDia]) {
+      // Set para no duplicar la ocurrencia si ambos días caen en la misma
+      // fecha (ej. el mes los recorta al mismo último día).
+      final fechas = <DateTime>{
+        _clampDiaDeMes(cursor.year, cursor.month, diaA),
+        _clampDiaDeMes(cursor.year, cursor.month, diaB),
+      }.toList()..sort();
+      for (final fecha in fechas) {
         if (_dentroDeRango(fecha, desde, hasta)) ocurrencias.add(fecha);
       }
       cursor = DateTime(cursor.year, cursor.month + 1);

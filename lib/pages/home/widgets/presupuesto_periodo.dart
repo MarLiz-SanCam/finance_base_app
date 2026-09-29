@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money.dart';
+import '../../../core/periodo_quincenal.dart';
 import '../../../data/db/enums.dart';
 import '../../../providers/categories_providers.dart';
 import '../../../providers/transactions_providers.dart';
 
-/// Presupuesto del mes en curso: suma de `budgetLimit` de las categorías de
-/// gasto contra lo efectivamente gastado en el mes.
+/// Presupuesto de la quincena en curso: suma de `budgetLimit` (presupuesto
+/// por quincena) de las categorías de gasto contra lo efectivamente gastado
+/// en esa misma quincena.
 class PresupuestoPeriodo extends ConsumerWidget {
   const PresupuestoPeriodo({super.key});
 
@@ -38,20 +40,20 @@ class PresupuestoPeriodo extends ConsumerWidget {
           );
         }
 
-        final ahora = DateTime.now();
-        final gastadoMes = egresosAsync.maybeWhen(
+        final periodo = PeriodoQuincenal.actual();
+        final gastadoQuincena = egresosAsync.maybeWhen(
           data: (egresos) => egresos
               .where(
                 (t) =>
-                    t.paymentDate!.year == ahora.year &&
-                    t.paymentDate!.month == ahora.month,
+                    !t.paymentDate!.isBefore(periodo.inicio) &&
+                    t.paymentDate!.isBefore(periodo.finExclusivo),
               )
               .fold<int>(0, (suma, t) => suma + t.amount),
           orElse: () => 0,
         );
 
-        final progreso = (gastadoMes / presupuestoTotal).clamp(0.0, 1.0);
-        final excedido = gastadoMes > presupuestoTotal;
+        final progreso = (gastadoQuincena / presupuestoTotal).clamp(0.0, 1.0);
+        final excedido = gastadoQuincena > presupuestoTotal;
         final colorExceso = Theme.of(context).colorScheme.error;
 
         return Card(
@@ -61,12 +63,12 @@ class PresupuestoPeriodo extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Presupuesto del mes',
+                  'Presupuesto quincena ${periodo.etiqueta()}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${Money.centavosAPesos(gastadoMes)} de '
+                  '${Money.centavosAPesos(gastadoQuincena)} de '
                   '${Money.centavosAPesos(presupuestoTotal)}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,

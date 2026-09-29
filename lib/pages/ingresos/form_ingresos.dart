@@ -60,7 +60,9 @@ class _FormIngresoPageState extends ConsumerState<FormIngresoPage> {
 
     setState(() => _guardando = true);
     try {
-      await ref.read(transactionsRepositoryProvider).registrar(
+      await ref
+          .read(transactionsRepositoryProvider)
+          .registrar(
             concept: _conceptoController.text.trim(),
             amountCentavos: Money.pesosACentavos(_montoController.text),
             fecha: _fecha,
@@ -179,8 +181,7 @@ class _FormIngresoPageState extends ConsumerState<FormIngresoPage> {
                           child: Text(categoria.name),
                         ),
                     ],
-                    onChanged: (valor) =>
-                        setState(() => _categoriaId = valor),
+                    onChanged: (valor) => setState(() => _categoriaId = valor),
                   ),
                   loading: () => const Padding(
                     padding: EdgeInsets.symmetric(vertical: 12),

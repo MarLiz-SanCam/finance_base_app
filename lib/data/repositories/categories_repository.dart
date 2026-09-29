@@ -32,10 +32,15 @@ class CategoriesRepository {
     )..where((c) => c.id.equals(id) & c.deletedAt.isNull())).getSingle();
   }
 
+  /// [color] es el ARGB (`Color.toARGB32()`) elegido en
+  /// [AppColorPicker]/`FormCategoriaSheet`; el valor por defecto solo cubre
+  /// llamadas que no pasan por ese formulario (ej. pruebas), igual que el
+  /// default de la columna en `categories_table.dart`.
   Future<String> crear({
     required String name,
     required CategoryType type,
-    int presupuestoMensualCentavos = 0,
+    int color = 0xFF2A78D6,
+    int presupuestoQuincenalCentavos = 0,
   }) async {
     final id = const Uuid().v7();
     final userId = await _identity.obtenerUserId();
@@ -46,7 +51,8 @@ class CategoriesRepository {
         userId: userId,
         name: name,
         type: type,
-        budgetLimit: Value(presupuestoMensualCentavos),
+        color: Value(color),
+        budgetLimit: Value(presupuestoQuincenalCentavos),
         createdAt: Value(ahora),
         updatedAt: Value(ahora),
       ),
@@ -57,12 +63,14 @@ class CategoriesRepository {
   Future<void> actualizar({
     required String id,
     required String name,
-    required int presupuestoMensualCentavos,
+    required int color,
+    required int presupuestoQuincenalCentavos,
   }) {
     return (_db.update(_db.categories)..where((c) => c.id.equals(id))).write(
       CategoriesCompanion(
         name: Value(name),
-        budgetLimit: Value(presupuestoMensualCentavos),
+        color: Value(color),
+        budgetLimit: Value(presupuestoQuincenalCentavos),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -106,31 +114,51 @@ class CategoriesRepository {
     return obligacion != null;
   }
 
-  /// Total pagado (status=pagado) en la categoría durante el mes que
-  /// contiene [fecha] (por defecto, el mes actual), usando `payment_date`
-  /// (cuándo se pagó de verdad, no cuándo vencía). Se compara contra
-  /// `budget_limit` para mostrar el avance del presupuesto. Un gasto fijo
-  /// todavía `pendiente` no cuenta aquí.
-  Future<int> gastadoEnElMes(String categoryId, {DateTime? fecha}) async {
-    final ahora = fecha ?? DateTime.now();
-    final inicioMes = DateTime(ahora.year, ahora.month);
-    final inicioMesSiguiente = DateTime(ahora.year, ahora.month + 1);
-
+  /// Total pagado (status=pagado) de [type] en la categoría dentro de
+  /// `[desde, hasta)`, usando `payment_date` (cuándo se pagó de verdad, no
+  /// cuándo vencía). Un movimiento todavía `pendiente` no cuenta aquí.
+  Future<int> _montoEnRango(
+    String categoryId,
+    TransactionType type, {
+    required DateTime desde,
+    required DateTime hasta,
+  }) async {
     final total = _db.transactions.amount.sum();
     final query = _db.selectOnly(_db.transactions)
       ..addColumns([total])
       ..where(
         _db.transactions.categoryId.equals(categoryId) &
-            _db.transactions.type.equalsValue(TransactionType.gasto) &
+            _db.transactions.type.equalsValue(type) &
             _db.transactions.status.equalsValue(TransactionStatus.pagado) &
             _db.transactions.deletedAt.isNull() &
-            _db.transactions.paymentDate.isBiggerOrEqualValue(inicioMes) &
-            _db.transactions.paymentDate.isSmallerThanValue(
-              inicioMesSiguiente,
-            ),
+            _db.transactions.paymentDate.isBiggerOrEqualValue(desde) &
+            _db.transactions.paymentDate.isSmallerThanValue(hasta),
       );
 
     final fila = await query.getSingle();
     return fila.read(total) ?? 0;
   }
+
+  /// Gastado en la categoría dentro de `[desde, hasta)`. Se compara contra
+  /// `budget_limit` (presupuesto por quincena) para mostrar el avance del
+  /// presupuesto de la quincena vigente.
+  Future<int> gastadoEnRango(
+    String categoryId, {
+    required DateTime desde,
+    required DateTime hasta,
+  }) => _montoEnRango(categoryId, TransactionType.gasto, desde: desde, hasta: hasta);
+
+  /// Ingresado en la categoría dentro de `[desde, hasta)`. Simétrico a
+  /// [gastadoEnRango]; las categorías de ingreso no tienen `budget_limit`,
+  /// así que aquí solo se informa el monto, sin comparación.
+  Future<int> ingresadoEnRango(
+    String categoryId, {
+    required DateTime desde,
+    required DateTime hasta,
+  }) => _montoEnRango(
+    categoryId,
+    TransactionType.ingreso,
+    desde: desde,
+    hasta: hasta,
+  );
 }

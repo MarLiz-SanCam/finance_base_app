@@ -39,8 +39,15 @@ class Obligations extends Table {
 
   /// Día del mes (1-31) en que se paga. Para frecuencia `semanal` se
   /// interpreta como día ISO de la semana (1=lunes..7=domingo). Para
-  /// `anual` se ignora: se usa el mes/día de `start_date` como aniversario.
+  /// `quincenal` es el primer día de pago del mes (ver `paymentDay2` para el
+  /// segundo). Para `anual` se ignora: se usa el mes/día de `start_date`
+  /// como aniversario.
   IntColumn get paymentDay => integer().nullable()();
+
+  /// Segundo día del mes (1-31) en que se paga, exclusivo de la frecuencia
+  /// `quincenal` (el usuario elige ambas fechas; ya no se asumen día 15 y
+  /// último día de mes). Se ignora para el resto de las frecuencias.
+  IntColumn get paymentDay2 => integer().nullable()();
   TextColumn get status =>
       textEnum<ObligationStatus>().withDefault(
         Constant(ObligationStatus.activo.name),

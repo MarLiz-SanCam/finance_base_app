@@ -474,12 +474,12 @@ void main() {
       expect((await accounts.obtener(cuentaId)).currentBalance, -60000);
     });
 
-    test('gastadoEnElMes no cuenta transacciones todavía pendientes', () async {
+    test('gastadoEnRango no cuenta transacciones todavía pendientes', () async {
       final cuentaId = await accounts.crear(name: 'Débito', type: AccountType.debito);
       final categoriaId = await categories.crear(
         name: 'Servicios',
         type: CategoryType.gasto,
-        presupuestoMensualCentavos: 100000,
+        presupuestoQuincenalCentavos: 100000,
       );
       await obligations.crear(
         concept: 'Internet',
@@ -493,12 +493,14 @@ void main() {
       );
       await obligations.generarPagosPendientes(horizonte: DateTime(2026, 9, 16));
 
-      expect(await categories.gastadoEnElMes(categoriaId, fecha: DateTime(2026, 9, 20)), 0);
+      final desde = DateTime(2026, 9, 1);
+      final hasta = DateTime(2026, 9, 16);
+      expect(await categories.gastadoEnRango(categoriaId, desde: desde, hasta: hasta), 0);
 
       final pendiente = (await transactions.watchPendientes().first).single;
       await transactions.confirmarPago(pendiente.id, fecha: DateTime(2026, 9, 10));
 
-      expect(await categories.gastadoEnElMes(categoriaId, fecha: DateTime(2026, 9, 20)), 60000);
+      expect(await categories.gastadoEnRango(categoriaId, desde: desde, hasta: hasta), 60000);
     });
 
     test('transferir mueve el saldo de una cuenta a otra sin categoría', () async {

@@ -45,9 +45,7 @@ class TablaIngresos extends ConsumerWidget {
                     cells: [
                       DataCell(Text(ingreso.concept)),
                       DataCell(Text(Money.centavosAPesos(ingreso.amount))),
-                      DataCell(
-                        Text(formatoFecha.format(ingreso.paymentDate!)),
-                      ),
+                      DataCell(Text(formatoFecha.format(ingreso.paymentDate!))),
                     ],
                   ),
               ],

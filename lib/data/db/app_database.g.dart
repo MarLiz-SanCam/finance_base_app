@@ -575,6 +575,16 @@ class $CategoriesTable extends Categories
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<int> color = GeneratedColumn<int>(
+    'color',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0xFF2A78D6),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -617,6 +627,7 @@ class $CategoriesTable extends Categories
     name,
     type,
     budgetLimit,
+    color,
     createdAt,
     updatedAt,
     deletedAt,
@@ -661,6 +672,12 @@ class $CategoriesTable extends Categories
           data['budget_limit']!,
           _budgetLimitMeta,
         ),
+      );
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -712,6 +729,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.int,
         data['${effectivePrefix}budget_limit'],
       )!,
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -742,6 +763,7 @@ class Category extends DataClass implements Insertable<Category> {
   final String name;
   final CategoryType type;
   final int budgetLimit;
+  final int color;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -751,6 +773,7 @@ class Category extends DataClass implements Insertable<Category> {
     required this.name,
     required this.type,
     required this.budgetLimit,
+    required this.color,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -767,6 +790,7 @@ class Category extends DataClass implements Insertable<Category> {
       );
     }
     map['budget_limit'] = Variable<int>(budgetLimit);
+    map['color'] = Variable<int>(color);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -782,6 +806,7 @@ class Category extends DataClass implements Insertable<Category> {
       name: Value(name),
       type: Value(type),
       budgetLimit: Value(budgetLimit),
+      color: Value(color),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -803,6 +828,7 @@ class Category extends DataClass implements Insertable<Category> {
         serializer.fromJson<String>(json['type']),
       ),
       budgetLimit: serializer.fromJson<int>(json['budgetLimit']),
+      color: serializer.fromJson<int>(json['color']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -819,6 +845,7 @@ class Category extends DataClass implements Insertable<Category> {
         $CategoriesTable.$convertertype.toJson(type),
       ),
       'budgetLimit': serializer.toJson<int>(budgetLimit),
+      'color': serializer.toJson<int>(color),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -831,6 +858,7 @@ class Category extends DataClass implements Insertable<Category> {
     String? name,
     CategoryType? type,
     int? budgetLimit,
+    int? color,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -840,6 +868,7 @@ class Category extends DataClass implements Insertable<Category> {
     name: name ?? this.name,
     type: type ?? this.type,
     budgetLimit: budgetLimit ?? this.budgetLimit,
+    color: color ?? this.color,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -853,6 +882,7 @@ class Category extends DataClass implements Insertable<Category> {
       budgetLimit: data.budgetLimit.present
           ? data.budgetLimit.value
           : this.budgetLimit,
+      color: data.color.present ? data.color.value : this.color,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -867,6 +897,7 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('name: $name, ')
           ..write('type: $type, ')
           ..write('budgetLimit: $budgetLimit, ')
+          ..write('color: $color, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -881,6 +912,7 @@ class Category extends DataClass implements Insertable<Category> {
     name,
     type,
     budgetLimit,
+    color,
     createdAt,
     updatedAt,
     deletedAt,
@@ -894,6 +926,7 @@ class Category extends DataClass implements Insertable<Category> {
           other.name == this.name &&
           other.type == this.type &&
           other.budgetLimit == this.budgetLimit &&
+          other.color == this.color &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -905,6 +938,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<String> name;
   final Value<CategoryType> type;
   final Value<int> budgetLimit;
+  final Value<int> color;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -915,6 +949,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.name = const Value.absent(),
     this.type = const Value.absent(),
     this.budgetLimit = const Value.absent(),
+    this.color = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -926,6 +961,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     required String name,
     required CategoryType type,
     this.budgetLimit = const Value.absent(),
+    this.color = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -940,6 +976,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<String>? name,
     Expression<String>? type,
     Expression<int>? budgetLimit,
+    Expression<int>? color,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -951,6 +988,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (name != null) 'name': name,
       if (type != null) 'type': type,
       if (budgetLimit != null) 'budget_limit': budgetLimit,
+      if (color != null) 'color': color,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -964,6 +1002,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Value<String>? name,
     Value<CategoryType>? type,
     Value<int>? budgetLimit,
+    Value<int>? color,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -975,6 +1014,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       name: name ?? this.name,
       type: type ?? this.type,
       budgetLimit: budgetLimit ?? this.budgetLimit,
+      color: color ?? this.color,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -1002,6 +1042,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (budgetLimit.present) {
       map['budget_limit'] = Variable<int>(budgetLimit.value);
     }
+    if (color.present) {
+      map['color'] = Variable<int>(color.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1025,6 +1068,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('name: $name, ')
           ..write('type: $type, ')
           ..write('budgetLimit: $budgetLimit, ')
+          ..write('color: $color, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -1141,6 +1185,17 @@ class $ObligationsTable extends Obligations
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _paymentDay2Meta = const VerificationMeta(
+    'paymentDay2',
+  );
+  @override
+  late final GeneratedColumn<int> paymentDay2 = GeneratedColumn<int>(
+    'payment_day2',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<ObligationStatus, String> status =
       GeneratedColumn<String>(
@@ -1242,6 +1297,7 @@ class $ObligationsTable extends Obligations
     frequency,
     amountPerPeriod,
     paymentDay,
+    paymentDay2,
     status,
     lastGeneratedDate,
     totalAmount,
@@ -1311,6 +1367,15 @@ class $ObligationsTable extends Obligations
       context.handle(
         _paymentDayMeta,
         paymentDay.isAcceptableOrUnknown(data['payment_day']!, _paymentDayMeta),
+      );
+    }
+    if (data.containsKey('payment_day2')) {
+      context.handle(
+        _paymentDay2Meta,
+        paymentDay2.isAcceptableOrUnknown(
+          data['payment_day2']!,
+          _paymentDay2Meta,
+        ),
       );
     }
     if (data.containsKey('last_generated_date')) {
@@ -1410,6 +1475,10 @@ class $ObligationsTable extends Obligations
         DriftSqlType.int,
         data['${effectivePrefix}payment_day'],
       ),
+      paymentDay2: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}payment_day2'],
+      ),
       status: $ObligationsTable.$converterstatus.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -1482,8 +1551,15 @@ class Obligation extends DataClass implements Insertable<Obligation> {
 
   /// Día del mes (1-31) en que se paga. Para frecuencia `semanal` se
   /// interpreta como día ISO de la semana (1=lunes..7=domingo). Para
-  /// `anual` se ignora: se usa el mes/día de `start_date` como aniversario.
+  /// `quincenal` es el primer día de pago del mes (ver `paymentDay2` para el
+  /// segundo). Para `anual` se ignora: se usa el mes/día de `start_date`
+  /// como aniversario.
   final int? paymentDay;
+
+  /// Segundo día del mes (1-31) en que se paga, exclusivo de la frecuencia
+  /// `quincenal` (el usuario elige ambas fechas; ya no se asumen día 15 y
+  /// último día de mes). Se ignora para el resto de las frecuencias.
+  final int? paymentDay2;
   final ObligationStatus status;
   final DateTime? lastGeneratedDate;
   final int? totalAmount;
@@ -1502,6 +1578,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
     required this.frequency,
     this.amountPerPeriod,
     this.paymentDay,
+    this.paymentDay2,
     required this.status,
     this.lastGeneratedDate,
     this.totalAmount,
@@ -1536,6 +1613,9 @@ class Obligation extends DataClass implements Insertable<Obligation> {
     }
     if (!nullToAbsent || paymentDay != null) {
       map['payment_day'] = Variable<int>(paymentDay);
+    }
+    if (!nullToAbsent || paymentDay2 != null) {
+      map['payment_day2'] = Variable<int>(paymentDay2);
     }
     {
       map['status'] = Variable<String>(
@@ -1579,6 +1659,9 @@ class Obligation extends DataClass implements Insertable<Obligation> {
       paymentDay: paymentDay == null && nullToAbsent
           ? const Value.absent()
           : Value(paymentDay),
+      paymentDay2: paymentDay2 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentDay2),
       status: Value(status),
       lastGeneratedDate: lastGeneratedDate == null && nullToAbsent
           ? const Value.absent()
@@ -1619,6 +1702,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
       ),
       amountPerPeriod: serializer.fromJson<int?>(json['amountPerPeriod']),
       paymentDay: serializer.fromJson<int?>(json['paymentDay']),
+      paymentDay2: serializer.fromJson<int?>(json['paymentDay2']),
       status: $ObligationsTable.$converterstatus.fromJson(
         serializer.fromJson<String>(json['status']),
       ),
@@ -1650,6 +1734,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
       ),
       'amountPerPeriod': serializer.toJson<int?>(amountPerPeriod),
       'paymentDay': serializer.toJson<int?>(paymentDay),
+      'paymentDay2': serializer.toJson<int?>(paymentDay2),
       'status': serializer.toJson<String>(
         $ObligationsTable.$converterstatus.toJson(status),
       ),
@@ -1673,6 +1758,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
     ObligationFrequency? frequency,
     Value<int?> amountPerPeriod = const Value.absent(),
     Value<int?> paymentDay = const Value.absent(),
+    Value<int?> paymentDay2 = const Value.absent(),
     ObligationStatus? status,
     Value<DateTime?> lastGeneratedDate = const Value.absent(),
     Value<int?> totalAmount = const Value.absent(),
@@ -1693,6 +1779,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
         ? amountPerPeriod.value
         : this.amountPerPeriod,
     paymentDay: paymentDay.present ? paymentDay.value : this.paymentDay,
+    paymentDay2: paymentDay2.present ? paymentDay2.value : this.paymentDay2,
     status: status ?? this.status,
     lastGeneratedDate: lastGeneratedDate.present
         ? lastGeneratedDate.value
@@ -1721,6 +1808,9 @@ class Obligation extends DataClass implements Insertable<Obligation> {
       paymentDay: data.paymentDay.present
           ? data.paymentDay.value
           : this.paymentDay,
+      paymentDay2: data.paymentDay2.present
+          ? data.paymentDay2.value
+          : this.paymentDay2,
       status: data.status.present ? data.status.value : this.status,
       lastGeneratedDate: data.lastGeneratedDate.present
           ? data.lastGeneratedDate.value
@@ -1748,6 +1838,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
           ..write('frequency: $frequency, ')
           ..write('amountPerPeriod: $amountPerPeriod, ')
           ..write('paymentDay: $paymentDay, ')
+          ..write('paymentDay2: $paymentDay2, ')
           ..write('status: $status, ')
           ..write('lastGeneratedDate: $lastGeneratedDate, ')
           ..write('totalAmount: $totalAmount, ')
@@ -1771,6 +1862,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
     frequency,
     amountPerPeriod,
     paymentDay,
+    paymentDay2,
     status,
     lastGeneratedDate,
     totalAmount,
@@ -1793,6 +1885,7 @@ class Obligation extends DataClass implements Insertable<Obligation> {
           other.frequency == this.frequency &&
           other.amountPerPeriod == this.amountPerPeriod &&
           other.paymentDay == this.paymentDay &&
+          other.paymentDay2 == this.paymentDay2 &&
           other.status == this.status &&
           other.lastGeneratedDate == this.lastGeneratedDate &&
           other.totalAmount == this.totalAmount &&
@@ -1813,6 +1906,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
   final Value<ObligationFrequency> frequency;
   final Value<int?> amountPerPeriod;
   final Value<int?> paymentDay;
+  final Value<int?> paymentDay2;
   final Value<ObligationStatus> status;
   final Value<DateTime?> lastGeneratedDate;
   final Value<int?> totalAmount;
@@ -1832,6 +1926,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     this.frequency = const Value.absent(),
     this.amountPerPeriod = const Value.absent(),
     this.paymentDay = const Value.absent(),
+    this.paymentDay2 = const Value.absent(),
     this.status = const Value.absent(),
     this.lastGeneratedDate = const Value.absent(),
     this.totalAmount = const Value.absent(),
@@ -1852,6 +1947,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     required ObligationFrequency frequency,
     this.amountPerPeriod = const Value.absent(),
     this.paymentDay = const Value.absent(),
+    this.paymentDay2 = const Value.absent(),
     this.status = const Value.absent(),
     this.lastGeneratedDate = const Value.absent(),
     this.totalAmount = const Value.absent(),
@@ -1877,6 +1973,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     Expression<String>? frequency,
     Expression<int>? amountPerPeriod,
     Expression<int>? paymentDay,
+    Expression<int>? paymentDay2,
     Expression<String>? status,
     Expression<DateTime>? lastGeneratedDate,
     Expression<int>? totalAmount,
@@ -1897,6 +1994,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
       if (frequency != null) 'frequency': frequency,
       if (amountPerPeriod != null) 'amount_per_period': amountPerPeriod,
       if (paymentDay != null) 'payment_day': paymentDay,
+      if (paymentDay2 != null) 'payment_day2': paymentDay2,
       if (status != null) 'status': status,
       if (lastGeneratedDate != null) 'last_generated_date': lastGeneratedDate,
       if (totalAmount != null) 'total_amount': totalAmount,
@@ -1919,6 +2017,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     Value<ObligationFrequency>? frequency,
     Value<int?>? amountPerPeriod,
     Value<int?>? paymentDay,
+    Value<int?>? paymentDay2,
     Value<ObligationStatus>? status,
     Value<DateTime?>? lastGeneratedDate,
     Value<int?>? totalAmount,
@@ -1939,6 +2038,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
       frequency: frequency ?? this.frequency,
       amountPerPeriod: amountPerPeriod ?? this.amountPerPeriod,
       paymentDay: paymentDay ?? this.paymentDay,
+      paymentDay2: paymentDay2 ?? this.paymentDay2,
       status: status ?? this.status,
       lastGeneratedDate: lastGeneratedDate ?? this.lastGeneratedDate,
       totalAmount: totalAmount ?? this.totalAmount,
@@ -1985,6 +2085,9 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
     if (paymentDay.present) {
       map['payment_day'] = Variable<int>(paymentDay.value);
     }
+    if (paymentDay2.present) {
+      map['payment_day2'] = Variable<int>(paymentDay2.value);
+    }
     if (status.present) {
       map['status'] = Variable<String>(
         $ObligationsTable.$converterstatus.toSql(status.value),
@@ -2029,6 +2132,7 @@ class ObligationsCompanion extends UpdateCompanion<Obligation> {
           ..write('frequency: $frequency, ')
           ..write('amountPerPeriod: $amountPerPeriod, ')
           ..write('paymentDay: $paymentDay, ')
+          ..write('paymentDay2: $paymentDay2, ')
           ..write('status: $status, ')
           ..write('lastGeneratedDate: $lastGeneratedDate, ')
           ..write('totalAmount: $totalAmount, ')
@@ -3834,6 +3938,7 @@ typedef $$CategoriesTableCreateCompanionBuilder =
       required String name,
       required CategoryType type,
       Value<int> budgetLimit,
+      Value<int> color,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -3846,6 +3951,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder =
       Value<String> name,
       Value<CategoryType> type,
       Value<int> budgetLimit,
+      Value<int> color,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -3925,6 +4031,11 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<int> get budgetLimit => $composableBuilder(
     column: $table.budgetLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get color => $composableBuilder(
+    column: $table.color,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4028,6 +4139,11 @@ class $$CategoriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4069,6 +4185,9 @@ class $$CategoriesTableAnnotationComposer
     column: $table.budgetLimit,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -4163,6 +4282,7 @@ class $$CategoriesTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<CategoryType> type = const Value.absent(),
                 Value<int> budgetLimit = const Value.absent(),
+                Value<int> color = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -4173,6 +4293,7 @@ class $$CategoriesTableTableManager
                 name: name,
                 type: type,
                 budgetLimit: budgetLimit,
+                color: color,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -4185,6 +4306,7 @@ class $$CategoriesTableTableManager
                 required String name,
                 required CategoryType type,
                 Value<int> budgetLimit = const Value.absent(),
+                Value<int> color = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -4195,6 +4317,7 @@ class $$CategoriesTableTableManager
                 name: name,
                 type: type,
                 budgetLimit: budgetLimit,
+                color: color,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -4294,6 +4417,7 @@ typedef $$ObligationsTableCreateCompanionBuilder =
       required ObligationFrequency frequency,
       Value<int?> amountPerPeriod,
       Value<int?> paymentDay,
+      Value<int?> paymentDay2,
       Value<ObligationStatus> status,
       Value<DateTime?> lastGeneratedDate,
       Value<int?> totalAmount,
@@ -4315,6 +4439,7 @@ typedef $$ObligationsTableUpdateCompanionBuilder =
       Value<ObligationFrequency> frequency,
       Value<int?> amountPerPeriod,
       Value<int?> paymentDay,
+      Value<int?> paymentDay2,
       Value<ObligationStatus> status,
       Value<DateTime?> lastGeneratedDate,
       Value<int?> totalAmount,
@@ -4430,6 +4555,11 @@ class $$ObligationsTableFilterComposer
 
   ColumnFilters<int> get paymentDay => $composableBuilder(
     column: $table.paymentDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get paymentDay2 => $composableBuilder(
+    column: $table.paymentDay2,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4590,6 +4720,11 @@ class $$ObligationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get paymentDay2 => $composableBuilder(
+    column: $table.paymentDay2,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
@@ -4708,6 +4843,11 @@ class $$ObligationsTableAnnotationComposer
 
   GeneratedColumn<int> get paymentDay => $composableBuilder(
     column: $table.paymentDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get paymentDay2 => $composableBuilder(
+    column: $table.paymentDay2,
     builder: (column) => column,
   );
 
@@ -4852,6 +4992,7 @@ class $$ObligationsTableTableManager
                 Value<ObligationFrequency> frequency = const Value.absent(),
                 Value<int?> amountPerPeriod = const Value.absent(),
                 Value<int?> paymentDay = const Value.absent(),
+                Value<int?> paymentDay2 = const Value.absent(),
                 Value<ObligationStatus> status = const Value.absent(),
                 Value<DateTime?> lastGeneratedDate = const Value.absent(),
                 Value<int?> totalAmount = const Value.absent(),
@@ -4871,6 +5012,7 @@ class $$ObligationsTableTableManager
                 frequency: frequency,
                 amountPerPeriod: amountPerPeriod,
                 paymentDay: paymentDay,
+                paymentDay2: paymentDay2,
                 status: status,
                 lastGeneratedDate: lastGeneratedDate,
                 totalAmount: totalAmount,
@@ -4892,6 +5034,7 @@ class $$ObligationsTableTableManager
                 required ObligationFrequency frequency,
                 Value<int?> amountPerPeriod = const Value.absent(),
                 Value<int?> paymentDay = const Value.absent(),
+                Value<int?> paymentDay2 = const Value.absent(),
                 Value<ObligationStatus> status = const Value.absent(),
                 Value<DateTime?> lastGeneratedDate = const Value.absent(),
                 Value<int?> totalAmount = const Value.absent(),
@@ -4911,6 +5054,7 @@ class $$ObligationsTableTableManager
                 frequency: frequency,
                 amountPerPeriod: amountPerPeriod,
                 paymentDay: paymentDay,
+                paymentDay2: paymentDay2,
                 status: status,
                 lastGeneratedDate: lastGeneratedDate,
                 totalAmount: totalAmount,

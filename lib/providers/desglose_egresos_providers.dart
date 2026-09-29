@@ -76,6 +76,22 @@ final totalesPorGrupoProvider =
       return totales;
     });
 
+/// Total presupuestado (gastos con obligación fija o progresiva) vs. no
+/// planeado (gastos sueltos, sin obligación — "gastos hormiga") en la
+/// quincena actual. Alimenta el encabezado de Balance > Gastos.
+final presupuestadoVsNoPlaneadoProvider =
+    FutureProvider.autoDispose<({int presupuestado, int noPlaneado})>((
+      ref,
+    ) async {
+      final totales = await ref.watch(totalesPorGrupoProvider.future);
+      return (
+        presupuestado:
+            (totales[GrupoGasto.fijo] ?? 0) +
+            (totales[GrupoGasto.progresivo] ?? 0),
+        noPlaneado: totales[GrupoGasto.variable] ?? 0,
+      );
+    });
+
 /// Categorías con subtotal dentro de un grupo, en la quincena actual,
 /// ordenadas de mayor a menor gasto.
 final categoriasPorGrupoProvider = FutureProvider.autoDispose

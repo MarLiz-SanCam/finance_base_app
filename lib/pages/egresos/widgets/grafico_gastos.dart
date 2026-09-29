@@ -5,8 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/money.dart';
 import '../../../providers/egresos_dashboard_providers.dart';
 
-/// Gráfico de línea de gastos, con selector para agrupar por día del mes en
-/// curso ("mensual") o por mes del año en curso ("anual").
+/// Gráfico de línea de gastos, con selector para agrupar por día de la
+/// quincena en curso ("quincenal"), día del mes en curso ("mensual") o por
+/// mes del año en curso ("anual").
 class GraficoGastos extends ConsumerWidget {
   const GraficoGastos({super.key});
 
@@ -24,6 +25,10 @@ class GraficoGastos extends ConsumerWidget {
             Text('Gastos por período', style: theme.textTheme.titleSmall),
             SegmentedButton<EgresosChartMode>(
               segments: const [
+                ButtonSegment(
+                  value: EgresosChartMode.quincenal,
+                  label: Text('Quincenal'),
+                ),
                 ButtonSegment(
                   value: EgresosChartMode.mensual,
                   label: Text('Mensual'),
@@ -44,11 +49,33 @@ class GraficoGastos extends ConsumerWidget {
         const SizedBox(height: 12),
         SizedBox(
           height: 220,
-          child: modo == EgresosChartMode.mensual
-              ? const _LineaMensual()
-              : const _LineaAnual(),
+          child: switch (modo) {
+            EgresosChartMode.quincenal => const _LineaQuincenal(),
+            EgresosChartMode.mensual => const _LineaMensual(),
+            EgresosChartMode.anual => const _LineaAnual(),
+          },
         ),
       ],
+    );
+  }
+}
+
+class _LineaQuincenal extends ConsumerWidget {
+  const _LineaQuincenal();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final datos = ref.watch(gastoPorDiaDeLaQuincenaProvider);
+    return datos.when(
+      data: (totalesPorDia) => _GraficoLinea(
+        valoresCentavos: totalesPorDia,
+        etiquetaEje: (indice) => '${indice + 1}',
+        saltoEtiquetas: totalesPorDia.length <= 6
+            ? 1
+            : (totalesPorDia.length / 6).ceil(),
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error al cargar el gráfico: $e')),
     );
   }
 }

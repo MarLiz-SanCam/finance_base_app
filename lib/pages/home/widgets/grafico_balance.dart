@@ -3,14 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/components/app_showcase.dart';
 import '../../../core/money.dart';
+import '../../../core/showcase/showcase_keys.dart';
 import '../../../data/db/app_database.dart';
 import '../../../data/db/enums.dart';
 import '../../../providers/transactions_providers.dart';
 
-enum _Periodo { mensual, anual }
+enum _Periodo { quincenal, mensual, anual }
 
-const _cantidadDePuntos = {_Periodo.mensual: 6, _Periodo.anual: 5};
+const _cantidadDePuntos = {
+  _Periodo.quincenal: 8,
+  _Periodo.mensual: 6,
+  _Periodo.anual: 5,
+};
 
 class _PuntoHistorico {
   _PuntoHistorico(this.etiqueta, this.ingresos, this.egresos);
@@ -22,6 +28,8 @@ class _PuntoHistorico {
 
 DateTime _inicioDePeriodo(DateTime fecha, _Periodo periodo) {
   switch (periodo) {
+    case _Periodo.quincenal:
+      return DateTime(fecha.year, fecha.month, fecha.day <= 15 ? 1 : 16);
     case _Periodo.mensual:
       return DateTime(fecha.year, fecha.month);
     case _Periodo.anual:
@@ -31,6 +39,10 @@ DateTime _inicioDePeriodo(DateTime fecha, _Periodo periodo) {
 
 DateTime _periodoAnterior(DateTime inicio, _Periodo periodo) {
   switch (periodo) {
+    case _Periodo.quincenal:
+      if (inicio.day == 16) return DateTime(inicio.year, inicio.month, 1);
+      final mesAnterior = DateTime(inicio.year, inicio.month - 1);
+      return DateTime(mesAnterior.year, mesAnterior.month, 16);
     case _Periodo.mensual:
       return DateTime(inicio.year, inicio.month - 1);
     case _Periodo.anual:
@@ -40,6 +52,9 @@ DateTime _periodoAnterior(DateTime inicio, _Periodo periodo) {
 
 String _etiquetaDePeriodo(DateTime inicio, _Periodo periodo) {
   switch (periodo) {
+    case _Periodo.quincenal:
+      final quincena = inicio.day <= 15 ? '1ra' : '2da';
+      return '$quincena ${DateFormat('MMM', 'es_MX').format(inicio)}';
     case _Periodo.mensual:
       return DateFormat('MMM yy', 'es_MX').format(inicio);
     case _Periodo.anual:
@@ -74,13 +89,17 @@ List<_PuntoHistorico> _agruparPorPeriodo(
 
   return periodos
       .map(
-        (p) =>
-            _PuntoHistorico(_etiquetaDePeriodo(p, periodo), ingresos[p]!, egresos[p]!),
+        (p) => _PuntoHistorico(
+          _etiquetaDePeriodo(p, periodo),
+          ingresos[p]!,
+          egresos[p]!,
+        ),
       )
       .toList();
 }
 
-/// Histórico de ingresos vs. egresos agrupado por mes o año, a elección.
+/// Histórico de ingresos vs. egresos agrupado por quincena, mes o año, a
+/// elección.
 class GraficoBalance extends ConsumerStatefulWidget {
   const GraficoBalance({super.key});
 
@@ -89,7 +108,7 @@ class GraficoBalance extends ConsumerStatefulWidget {
 }
 
 class _GraficoBalanceState extends ConsumerState<GraficoBalance> {
-  _Periodo _periodo = _Periodo.mensual;
+  _Periodo _periodo = _Periodo.quincenal;
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +122,45 @@ class _GraficoBalanceState extends ConsumerState<GraficoBalance> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'Ingresos y gastos',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            AppShowcase(
+              showcaseKey: ShowcaseKeys.resumenPeriodo,
+              title: 'Periodo del histórico',
+              description:
+                  'Cambia entre quincena, mes o año para agrupar el histórico como prefieras.',
+              borderRadius: 20,
+              child: SegmentedButton<_Periodo>(
+                // Sin esto, el ícono de palomita que agrega el segmento
+                // seleccionado le resta ancho a su etiqueta, y "Quincena" (la
+                // más larga) se parte en dos líneas justo al seleccionarla.
+                showSelectedIcon: false,
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding: WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  ),
+                  textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
+                ),
+                segments: const [
+                  ButtonSegment(
+                    value: _Periodo.quincenal,
+                    label: Text('Quincena'),
+                  ),
+                  ButtonSegment(value: _Periodo.mensual, label: Text('Mes')),
+                  ButtonSegment(value: _Periodo.anual, label: Text('Año')),
+                ],
+                selected: {_periodo},
+                onSelectionChanged: (seleccion) {
+                  setState(() => _periodo = seleccion.first);
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
               spacing: 16,
@@ -110,21 +168,11 @@ class _GraficoBalanceState extends ConsumerState<GraficoBalance> {
               children: [
                 _Leyenda(color: colorIngresos, label: 'Ingresos'),
                 _Leyenda(color: colorEgresos, label: 'Egresos'),
-                SegmentedButton<_Periodo>(
-                  segments: const [
-                    ButtonSegment(value: _Periodo.mensual, label: Text('Mes')),
-                    ButtonSegment(value: _Periodo.anual, label: Text('Año')),
-                  ],
-                  selected: {_periodo},
-                  onSelectionChanged: (seleccion) {
-                    setState(() => _periodo = seleccion.first);
-                  },
-                ),
               ],
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 220,
+              height: 248,
               child: transaccionesAsync.when(
                 data: (transacciones) {
                   final puntos = _agruparPorPeriodo(transacciones, _periodo);
@@ -134,8 +182,7 @@ class _GraficoBalanceState extends ConsumerState<GraficoBalance> {
                     colorEgresos: colorEgresos,
                   );
                 },
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stackTrace) =>
                     Center(child: Text('Error al cargar el histórico: $error')),
               ),
@@ -216,15 +263,25 @@ class _LineasHistorico extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 28,
+              // Vertical en vez de horizontal: con 8 puntos (vista
+              // quincenal) las etiquetas ("1ra sep", "16 oct"...) no caben
+              // una junto a otra sin encimarse. En vertical cada una solo
+              // necesita el ancho de un caracter, así que nunca chocan
+              // entre sí sin importar cuántos puntos tenga el gráfico.
+              reservedSize: 54,
               getTitlesWidget: (value, meta) {
                 final i = value.toInt();
                 if (i < 0 || i >= puntos.length) return const SizedBox();
                 return Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    puntos[i].etiqueta,
-                    style: Theme.of(context).textTheme.bodySmall,
+                  padding: const EdgeInsets.only(top: 8),
+                  child: RotatedBox(
+                    quarterTurns: 3,
+                    child: Text(
+                      puntos[i].etiqueta,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 11),
+                    ),
                   ),
                 );
               },

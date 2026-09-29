@@ -384,20 +384,51 @@ class TransactionsRepository {
     return fila.read(total) ?? 0;
   }
 
+  /// Total de ingresos pagados en `[desde, hasta)`. Simétrico a
+  /// [totalGastoEnRango], para el encabezado de Balance > Ingresos.
+  Future<int> totalIngresoEnRango({
+    required DateTime desde,
+    required DateTime hasta,
+  }) async {
+    final total = _db.transactions.amount.sum();
+    final query = _db.selectOnly(_db.transactions)
+      ..addColumns([total])
+      ..where(
+        _db.transactions.type.equalsValue(TransactionType.ingreso) &
+            _db.transactions.status.equalsValue(TransactionStatus.pagado) &
+            _db.transactions.deletedAt.isNull() &
+            _db.transactions.paymentDate.isBiggerOrEqualValue(desde) &
+            _db.transactions.paymentDate.isSmallerThanValue(hasta),
+      );
+    final fila = await query.getSingle();
+    return fila.read(total) ?? 0;
+  }
+
+  /// Total de gastos pagados por día dentro de `[desde, hasta)` (índice 0 =
+  /// `desde`). Alimenta las vistas de línea (quincenal/mensual) del gráfico
+  /// del dashboard de egresos.
+  Future<List<int>> gastoPorDiaEnRango({
+    required DateTime desde,
+    required DateTime hasta,
+  }) async {
+    final dias = hasta.difference(desde).inDays;
+    final totales = List<int>.filled(dias, 0);
+
+    final filas = await gastosEnRango(desde: desde, hasta: hasta);
+    for (final t in filas) {
+      totales[t.paymentDate!.difference(desde).inDays] += t.amount;
+    }
+    return totales;
+  }
+
   /// Total de gastos pagados por día dentro de [mes] (índice 0 = día 1).
   /// Alimenta la vista mensual del gráfico de línea del dashboard de
   /// egresos.
-  Future<List<int>> gastoPorDiaDelMes(DateTime mes) async {
-    final inicio = DateTime(mes.year, mes.month);
-    final finExclusivo = DateTime(mes.year, mes.month + 1);
-    final dias = finExclusivo.difference(inicio).inDays;
-    final totales = List<int>.filled(dias, 0);
-
-    final filas = await gastosEnRango(desde: inicio, hasta: finExclusivo);
-    for (final t in filas) {
-      totales[t.paymentDate!.day - 1] += t.amount;
-    }
-    return totales;
+  Future<List<int>> gastoPorDiaDelMes(DateTime mes) {
+    return gastoPorDiaEnRango(
+      desde: DateTime(mes.year, mes.month),
+      hasta: DateTime(mes.year, mes.month + 1),
+    );
   }
 
   /// Total de gastos pagados por mes dentro de [year] (índice 0 = enero).

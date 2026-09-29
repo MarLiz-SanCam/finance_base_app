@@ -78,7 +78,7 @@ class _ChipCategoria extends StatelessWidget {
     final theme = Theme.of(context);
     final presupuesto = resumen.category.budgetLimit;
     final progreso = presupuesto > 0
-        ? (resumen.gastadoEnElMes / presupuesto).clamp(0.0, 1.0)
+        ? (resumen.gastadoEnLaQuincena / presupuesto).clamp(0.0, 1.0)
         : null;
 
     return Container(
@@ -101,7 +101,7 @@ class _ChipCategoria extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            Money.centavosAPesos(resumen.gastadoEnElMes),
+            Money.centavosAPesos(resumen.gastadoEnLaQuincena),
             style: theme.textTheme.bodySmall,
           ),
           if (progreso != null)

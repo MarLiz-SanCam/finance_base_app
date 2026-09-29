@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
+import '../../core/components/buttons.dart';
+import '../../core/components/form_field.dart';
 import '../../core/money.dart';
 import '../../data/db/app_database.dart';
 import '../../data/db/enums.dart';
@@ -13,18 +16,31 @@ const _etiquetasTipo = {
   AccountType.credito: 'Crédito',
 };
 
+/// Abre el alta o edición de una cuenta en una hoja inferior.
+Future<void> mostrarFormularioCuenta(
+  BuildContext context, {
+  Account? cuentaExistente,
+}) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) => FormCuentaSheet(cuentaExistente: cuentaExistente),
+  );
+}
+
 /// Alta o edición de una cuenta. En edición no se puede tocar el saldo: se
 /// deriva de las transacciones pagadas (ver `AccountsRepository`).
-class FormCuentaPage extends ConsumerStatefulWidget {
-  const FormCuentaPage({super.key, this.cuentaExistente});
+class FormCuentaSheet extends ConsumerStatefulWidget {
+  const FormCuentaSheet({super.key, this.cuentaExistente});
 
   final Account? cuentaExistente;
 
   @override
-  ConsumerState<FormCuentaPage> createState() => _FormCuentaPageState();
+  ConsumerState<FormCuentaSheet> createState() => _FormCuentaSheetState();
 }
 
-class _FormCuentaPageState extends ConsumerState<FormCuentaPage> {
+class _FormCuentaSheetState extends ConsumerState<FormCuentaSheet> {
   final _formKey = GlobalKey<FormState>();
   late final _nombreController = TextEditingController(
     text: widget.cuentaExistente?.name,
@@ -117,96 +133,114 @@ class _FormCuentaPageState extends ConsumerState<FormCuentaPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_editando ? 'Editar cuenta' : 'Nueva cuenta'),
-        actions: [
-          if (_editando)
-            IconButton(
-              onPressed: _guardando ? null : _eliminar,
-              icon: const Icon(Icons.delete_outline),
-              tooltip: 'Eliminar cuenta',
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _nombreController,
-                  autofocus: !_editando,
-                  maxLength: 100,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre',
-                    hintText: 'Ej. Cartera, Tarjeta Banamex...',
-                  ),
-                  validator: (valor) {
-                    if (valor == null || valor.trim().isEmpty) {
-                      return 'El nombre es obligatorio.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<AccountType>(
-                  initialValue: _tipo,
-                  decoration: const InputDecoration(labelText: 'Tipo'),
-                  items: [
-                    for (final tipo in AccountType.values)
-                      DropdownMenuItem(
-                        value: tipo,
-                        child: Text(_etiquetasTipo[tipo]!),
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          4,
+          20,
+          20 + MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _editando ? 'Editar Cuenta' : 'Nueva Cuenta',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                  ],
-                  onChanged: (valor) => setState(() => _tipo = valor!),
-                ),
-                if (!_editando) ...[
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _saldoInicialController,
-                    decoration: const InputDecoration(
-                      labelText: 'Saldo inicial',
-                      prefixText: r'$ ',
-                      helperText:
-                          'Después de crearla, el saldo se calcula solo '
-                          'a partir de las transacciones.',
-                      helperMaxLines: 2,
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      if (_editando)
+                        IconButton(
+                          onPressed: _guardando ? null : _eliminar,
+                          icon: const Icon(Icons.delete_outline),
+                          tooltip: 'Eliminar cuenta',
+                          visualDensity: VisualDensity.compact,
+                        ),
                     ],
+                  ),
+                  const SizedBox(height: 20),
+                  AppFormTextField(
+                    icon: Icons.badge_outlined,
+                    label: 'Nombre',
+                    controller: _nombreController,
+                    autofocus: !_editando,
+                    maxLength: 100,
+                    textCapitalization: TextCapitalization.sentences,
+                    hintText: 'Ej. Cartera, Tarjeta Banamex...',
                     validator: (valor) {
-                      if (valor == null || valor.isEmpty) return null;
-                      try {
-                        Money.pesosACentavos(valor);
-                      } on FormatException {
-                        return 'Monto inválido.';
+                      if (valor == null || valor.trim().isEmpty) {
+                        return 'El nombre es obligatorio.';
                       }
                       return null;
                     },
                   ),
+                  const SizedBox(height: 12),
+                  AppFormDropdownField<AccountType>(
+                    icon: MdiIcons.walletOutline,
+                    label: 'Tipo de Cuenta',
+                    value: _tipo,
+                    items: [
+                      for (final tipo in AccountType.values)
+                        DropdownMenuItem(
+                          value: tipo,
+                          child: Text(_etiquetasTipo[tipo]!),
+                        ),
+                    ],
+                    onChanged: (valor) => setState(() => _tipo = valor!),
+                  ),
+                  if (!_editando) ...[
+                    const SizedBox(height: 12),
+                    AppFormTextField(
+                      icon: MdiIcons.cash,
+                      label: 'Saldo Inicial',
+                      controller: _saldoInicialController,
+                      prefixText: r'$ ',
+                      hintText: 'Ej. 500.00',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      validator: (valor) {
+                        if (valor == null || valor.isEmpty) return null;
+                        try {
+                          Money.pesosACentavos(valor);
+                        } on FormatException {
+                          return 'Monto inválido.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Después de crearla, el saldo se calcula solo a '
+                      'partir de las transacciones.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  AppPrimaryButton(
+                    label: _guardando ? 'Guardando…' : 'Guardar',
+                    onPressed: _guardando ? null : _guardar,
+                  ),
                 ],
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _guardando ? null : _guardar,
-                  child: _guardando
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Guardar'),
-                ),
-              ],
+              ),
             ),
           ),
         ),

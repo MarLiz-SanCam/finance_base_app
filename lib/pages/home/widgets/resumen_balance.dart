@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money.dart';
+import '../../../core/periodo_quincenal.dart';
 import '../../../data/db/app_database.dart';
 import '../../../data/db/enums.dart';
 import '../../../providers/transactions_providers.dart';
 
-/// Balance del mes en curso: ingresos, egresos y la diferencia entre ambos.
+/// Balance de la quincena en curso: ingresos, egresos y la diferencia entre
+/// ambos.
 class ResumenBalance extends ConsumerWidget {
   const ResumenBalance({super.key});
 
@@ -18,22 +20,23 @@ class ResumenBalance extends ConsumerWidget {
     final egresosAsync = ref.watch(
       transactionsByTypeStreamProvider(TransactionType.gasto),
     );
-    final ahora = DateTime.now();
+    final periodo = PeriodoQuincenal.actual();
 
-    int totalDelMes(AsyncValue<List<Transaction>> async) => async.maybeWhen(
-      data: (transacciones) => transacciones
-          .where(
-            (t) =>
-                t.paymentDate!.year == ahora.year &&
-                t.paymentDate!.month == ahora.month,
-          )
-          .fold<int>(0, (suma, t) => suma + t.amount),
-      orElse: () => 0,
-    );
+    int totalDeLaQuincena(AsyncValue<List<Transaction>> async) =>
+        async.maybeWhen(
+          data: (transacciones) => transacciones
+              .where(
+                (t) =>
+                    !t.paymentDate!.isBefore(periodo.inicio) &&
+                    t.paymentDate!.isBefore(periodo.finExclusivo),
+              )
+              .fold<int>(0, (suma, t) => suma + t.amount),
+          orElse: () => 0,
+        );
 
-    final ingresosMes = totalDelMes(ingresosAsync);
-    final egresosMes = totalDelMes(egresosAsync);
-    final balance = ingresosMes - egresosMes;
+    final ingresosQuincena = totalDeLaQuincena(ingresosAsync);
+    final egresosQuincena = totalDeLaQuincena(egresosAsync);
+    final balance = ingresosQuincena - egresosQuincena;
     final colorBalance = balance >= 0
         ? Colors.green.shade700
         : Theme.of(context).colorScheme.error;
@@ -45,7 +48,7 @@ class ResumenBalance extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Balance de este mes',
+              'Balance quincena ${periodo.etiqueta()}',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 4),
@@ -62,7 +65,7 @@ class ResumenBalance extends ConsumerWidget {
                 Expanded(
                   child: _Stat(
                     label: 'Ingresos',
-                    valor: Money.centavosAPesos(ingresosMes),
+                    valor: Money.centavosAPesos(ingresosQuincena),
                     color: Colors.green.shade700,
                     icon: Icons.arrow_upward,
                   ),
@@ -71,7 +74,7 @@ class ResumenBalance extends ConsumerWidget {
                 Expanded(
                   child: _Stat(
                     label: 'Egresos',
-                    valor: Money.centavosAPesos(egresosMes),
+                    valor: Money.centavosAPesos(egresosQuincena),
                     color: Theme.of(context).colorScheme.error,
                     icon: Icons.arrow_downward,
                   ),

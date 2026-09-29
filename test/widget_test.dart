@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:finance_base_app/data/db/app_database.dart';
 import 'package:finance_base_app/main.dart';
 import 'package:finance_base_app/providers/database_provider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -30,11 +31,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // IndexedStack mantiene las tres páginas montadas a la vez, así que
-    // cada título aparece tanto en el dashboard como en la barra inferior.
-    expect(find.text('Inicio'), findsWidgets);
-    expect(find.text('Egresos'), findsWidgets);
-    expect(find.text('Ingresos'), findsWidgets);
+    // Resumen es la pestaña por defecto: su AppBar muestra el título como
+    // texto. La barra de navegación inferior es solo íconos (sin
+    // etiqueta), así que ahí se verifica por ícono: Balance, Organización
+    // y el botón central "+" que registra según el contexto activo.
+    expect(find.text('Resumen'), findsWidgets);
+    expect(find.byIcon(Icons.swap_vert), findsWidgets);
+    expect(find.byIcon(Icons.dashboard_outlined), findsWidgets);
+    expect(find.byIcon(Icons.add), findsWidgets);
 
     await db.close();
     await tester.pump(Duration.zero);

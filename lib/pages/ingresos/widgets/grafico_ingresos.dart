@@ -93,7 +93,7 @@ class GraficoIngresos extends ConsumerStatefulWidget {
 }
 
 class _GraficoIngresosState extends ConsumerState<GraficoIngresos> {
-  _Periodo _periodo = _Periodo.mensual;
+  _Periodo _periodo = _Periodo.quincenal;
 
   @override
   Widget build(BuildContext context) {
@@ -135,8 +135,7 @@ class _GraficoIngresosState extends ConsumerState<GraficoIngresos> {
                   final puntos = _agruparPorPeriodo(ingresos, _periodo);
                   return _LineaHistorico(puntos: puntos);
                 },
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stackTrace) =>
                     Center(child: Text('Error al cargar el histórico: $error')),
               ),
@@ -217,7 +216,10 @@ class _LineaHistorico extends StatelessWidget {
             color: color,
             barWidth: 3,
             dotData: const FlDotData(),
-            belowBarData: BarAreaData(show: true, color: color.withValues(alpha: 0.12)),
+            belowBarData: BarAreaData(
+              show: true,
+              color: color.withValues(alpha: 0.12),
+            ),
           ),
         ],
       ),

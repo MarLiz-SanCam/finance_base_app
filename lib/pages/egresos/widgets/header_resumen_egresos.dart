@@ -3,99 +3,130 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money.dart';
 import '../../../core/periodo_quincenal.dart';
+import '../../../providers/desglose_egresos_providers.dart';
 import '../../../providers/egresos_dashboard_providers.dart';
-import '../form_egresos.dart';
 
-/// Monto gastado en la quincena actual + acceso rápido para registrar un
-/// gasto nuevo.
+/// Total gastado en la quincena actual, y su reparto entre gastos
+/// presupuestados (ligados a una obligación fija/progresiva) y gastos no
+/// planeados (sueltos, sin obligación — "gastos hormiga"). Registrar un
+/// gasto nuevo se dispara desde el botón central de la barra de
+/// navegación, no desde aquí.
 class HeaderResumenEgresos extends ConsumerWidget {
   const HeaderResumenEgresos({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final resumen = ref.watch(gastoQuincenaActualProvider);
+    final totalAsync = ref.watch(gastoQuincenaActualProvider);
+    final repartoAsync = ref.watch(presupuestadoVsNoPlaneadoProvider);
     final periodo = PeriodoQuincenal.actual();
     final theme = Theme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
+            Text(
+              'Gastos del período ${periodo.etiqueta()}',
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 4),
+            totalAsync.when(
+              data: (centavos) => Text(
+                Money.centavosAPesos(centavos),
+                style: theme.textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.error,
+                ),
+              ),
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 6),
+                child: SizedBox(
+                  height: 28,
+                  width: 28,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+              error: (e, _) => Text(
+                'No se pudo calcular',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+            const SizedBox(height: 16),
+            repartoAsync.when(
+              data: (reparto) => Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Gastado quincena ${periodo.etiqueta()}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  Expanded(
+                    child: _Reparto(
+                      icon: Icons.event_available_outlined,
+                      label: 'Presupuestados',
+                      color: theme.colorScheme.primary,
+                      centavos: reparto.presupuestado,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  resumen.when(
-                    data: (centavos) => Text(
-                      Money.centavosAPesos(centavos),
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.error,
-                      ),
-                    ),
-                    loading: () => const SizedBox(
-                      height: 28,
-                      width: 28,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    error: (e, _) => Text(
-                      'No se pudo calcular',
-                      style: theme.textTheme.bodyMedium,
+                  Expanded(
+                    child: _Reparto(
+                      icon: Icons.bolt_outlined,
+                      label: 'Gastos no planeados',
+                      color: theme.colorScheme.tertiary,
+                      centavos: reparto.noPlaneado,
                     ),
                   ),
                 ],
               ),
+              loading: () => const LinearProgressIndicator(),
+              error: (e, _) => const SizedBox.shrink(),
             ),
-            const SizedBox(width: 12),
-            const _BotonRegistrarGasto(),
           ],
         ),
-      ],
+      ),
     );
   }
 }
 
-class _BotonRegistrarGasto extends StatelessWidget {
-  const _BotonRegistrarGasto();
+class _Reparto extends StatelessWidget {
+  const _Reparto({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.centavos,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final int centavos;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Material(
-      color: colorScheme.primary,
-      shape: const StadiumBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const FormEgresoPage())),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.add, color: colorScheme.onPrimary),
-              const SizedBox(width: 8),
-              Text(
-                'Registrar gasto',
-                style: TextStyle(
-                  color: colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: theme.textTheme.bodySmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          Money.centavosAPesos(centavos),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
           ),
         ),
-      ),
+      ],
     );
   }
 }
