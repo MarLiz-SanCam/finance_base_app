@@ -97,18 +97,23 @@ class AppSecondaryButton extends StatelessWidget {
 /// Botón circular relleno, para accesos directos compactos. Su primer uso
 /// es en [AppMainAppBar]; incluye su propio margen horizontal para poder
 /// encadenar varios seguidos sin que el llamador agregue espaciadores.
+/// [size] fija el mismo ancho y alto (nunca un óvalo) para que todos los
+/// botones circulares de la app —el de ayuda, el de acción contextual, el
+/// de transferir, etc.— midan y se vean exactamente igual.
 class AppCircularIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
   final String? tooltip;
   final double iconSize;
+  final double size;
 
   const AppCircularIconButton({
     super.key,
     required this.icon,
     required this.onPressed,
     this.tooltip,
-    this.iconSize = 20,
+    this.iconSize = 22,
+    this.size = 44,
   });
 
   @override
@@ -116,16 +121,17 @@ class AppCircularIconButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: IconButton.filled(
         icon: Icon(icon),
         iconSize: iconSize,
         tooltip: tooltip,
         onPressed: onPressed,
-        visualDensity: VisualDensity.compact,
         style: IconButton.styleFrom(
           backgroundColor: colorScheme.primaryContainer,
           foregroundColor: colorScheme.onPrimaryContainer,
+          shape: const CircleBorder(),
+          fixedSize: Size.square(size),
         ),
       ),
     );

@@ -52,8 +52,7 @@ final gastosProximosAVencerProvider =
     Provider.autoDispose<AsyncValue<List<Transaction>>>((ref) {
       final pendientes = ref.watch(transaccionesPendientesProvider);
       return pendientes.whenData(
-        (lista) =>
-            lista.where((t) => t.type == TransactionType.gasto).toList(),
+        (lista) => lista.where((t) => t.type == TransactionType.gasto).toList(),
       );
     });
 
@@ -138,9 +137,7 @@ final gastoPorDiaDelMesProvider = FutureProvider.autoDispose<List<int>>((ref) {
 });
 
 /// Gasto por mes del año en curso, para la vista anual del gráfico.
-final gastoPorMesDelAnioProvider = FutureProvider.autoDispose<List<int>>((
-  ref,
-) {
+final gastoPorMesDelAnioProvider = FutureProvider.autoDispose<List<int>>((ref) {
   ref.watch(transactionsStreamProvider);
   return ref
       .watch(transactionsRepositoryProvider)

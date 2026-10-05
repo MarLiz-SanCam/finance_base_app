@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'core/config/theme.dart';
 import 'pages/root_shell.dart';
 import 'providers/database_provider.dart';
+import 'providers/theme_providers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,28 +19,22 @@ void main() async {
   // background reales en una app local: se ejecuta una vez al iniciar,
   // antes de construir la UI, para que "próximos a vencer" ya tenga datos.
   await container.read(obligationsRepositoryProvider).generarPagosPendientes();
+  // Paleta y modo guardados, cargados antes de la primera pantalla.
+  await container.read(themeControllerProvider.notifier).load();
   runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Paleta provisional (deepPurple): el tema principal de AppTheme
-    // todavía no se usa por sus colores, pero sí por su tipografía —
-    // fontFamily y el TextTheme (h1/h2/h3/body/...) ya definidos ahí, para
-    // que todo el texto de la app sea consistente en cuanto se confirme la
-    // paleta definitiva.
-    final colorScheme = ColorScheme.fromSeed(seedColor: Colors.deepPurple);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(themeControllerProvider);
     return MaterialApp(
       title: 'Finanzas',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: colorScheme,
-        fontFamily: 'Plus Jakarta Sans',
-        textTheme: AppTheme.textThemeFor(colorScheme.onSurface),
-      ),
+      theme: AppTheme.themeFor(settings.palette, Brightness.light),
+      darkTheme: AppTheme.themeFor(settings.palette, Brightness.dark),
+      themeMode: settings.mode,
       home: const RootShell(),
     );
   }

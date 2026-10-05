@@ -39,24 +39,22 @@ class Transactions extends Table {
   DateTimeColumn get dueDate => dateTime()();
   DateTimeColumn get paymentDate => dateTime().nullable()();
   TextColumn get type => textEnum<TransactionType>()();
-  TextColumn get status =>
-      textEnum<TransactionStatus>().withDefault(
-        Constant(TransactionStatus.pagado.name),
-      )();
+  TextColumn get status => textEnum<TransactionStatus>().withDefault(
+    Constant(TransactionStatus.pagado.name),
+  )();
 
   TextColumn get accountId => text().references(Accounts, #id)();
   TextColumn get destinationAccountId =>
       text().nullable().references(Accounts, #id)();
-  TextColumn get categoryId =>
-      text().nullable().references(Categories, #id)();
-  TextColumn get obligationId => text()
-      .nullable()
-      .references(Obligations, #id, onDelete: KeyAction.setNull)();
+  TextColumn get categoryId => text().nullable().references(Categories, #id)();
+  TextColumn get obligationId => text().nullable().references(
+    Obligations,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override

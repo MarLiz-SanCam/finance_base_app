@@ -23,12 +23,9 @@ class Categories extends Table {
   TextColumn get name => text().withLength(min: 1, max: 100)();
   TextColumn get type => textEnum<CategoryType>()();
   IntColumn get budgetLimit => integer().withDefault(const Constant(0))();
-  IntColumn get color =>
-      integer().withDefault(const Constant(0xFF2A78D6))();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  IntColumn get color => integer().withDefault(const Constant(0xFF2A78D6))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override

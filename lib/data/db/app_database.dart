@@ -29,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,9 +58,24 @@ class AppDatabase extends _$AppDatabase {
       // v6 -> v7: categories.color (ARGB elegido al crear la categoría),
       // para que el color de cada categoría sea fijo en vez de asignarse
       // según el orden de aparición en cada vista.
-      // Sin usuarios reales todavía, se recrea el esquema en vez de migrar
-      // datos de desarrollo.
-      for (final tabla in ['accounts', 'categories', 'obligations', 'transactions']) {
+      // v7 -> v8: accounts.credit_limit (límite de crédito, nullable) para
+      // las cuentas de tipo crédito. Se agrega la columna sin perder datos.
+      // v8 -> v9: accounts.statement_day y accounts.payment_due_day (día de
+      // corte y día límite de pago de las tarjetas de crédito).
+      // Sin usuarios reales todavía, para versiones anteriores a 7 se
+      // recrea el esquema en vez de migrar datos de desarrollo.
+      if (from >= 7) {
+        if (from < 8) await m.addColumn(accounts, accounts.creditLimit);
+        await m.addColumn(accounts, accounts.statementDay);
+        await m.addColumn(accounts, accounts.paymentDueDay);
+        return;
+      }
+      for (final tabla in [
+        'accounts',
+        'categories',
+        'obligations',
+        'transactions',
+      ]) {
         await m.deleteTable(tabla);
       }
       await m.createAll();

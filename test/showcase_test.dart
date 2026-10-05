@@ -104,10 +104,10 @@ void main() {
     // Primer paso: no hay "Anterior".
     expect(find.text('Anterior'), findsNothing);
 
-    // Se desmonta el árbol para liberar los ticker del overlay antes de
-    // cerrar la BD.
+    // Se desmonta el árbol para liberar los ticker del overlay y las
+    // suscripciones a la BD. No se llama a db.close(): con el showcase
+    // abierto se queda esperando y BD en memoria no necesita cierre.
     await tester.pumpWidget(const SizedBox());
-    await db.close();
-    await tester.pump(Duration.zero);
+    await tester.pump(const Duration(seconds: 1));
   });
 }

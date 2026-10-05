@@ -57,31 +57,36 @@ class ObligationsRepository {
     final id = const Uuid().v7();
     final userId = await _identity.obtenerUserId();
     final ahora = DateTime.now();
-    await _db.into(_db.obligations).insert(
-      ObligationsCompanion.insert(
-        id: id,
-        userId: userId,
-        concept: concept,
-        categoryId: categoryId,
-        accountId: Value(accountId),
-        type: type,
-        frequency: frequency,
-        amountPerPeriod: Value(amountPerPeriodCentavos),
-        paymentDay: Value(paymentDay),
-        paymentDay2: Value(paymentDay2),
-        totalAmount: Value(totalAmountCentavos),
-        startDate: Value(startDate),
-        endDate: Value(endDate),
-        createdAt: Value(ahora),
-        updatedAt: Value(ahora),
-      ),
-    );
+    await _db
+        .into(_db.obligations)
+        .insert(
+          ObligationsCompanion.insert(
+            id: id,
+            userId: userId,
+            concept: concept,
+            categoryId: categoryId,
+            accountId: Value(accountId),
+            type: type,
+            frequency: frequency,
+            amountPerPeriod: Value(amountPerPeriodCentavos),
+            paymentDay: Value(paymentDay),
+            paymentDay2: Value(paymentDay2),
+            totalAmount: Value(totalAmountCentavos),
+            startDate: Value(startDate),
+            endDate: Value(endDate),
+            createdAt: Value(ahora),
+            updatedAt: Value(ahora),
+          ),
+        );
     return id;
   }
 
   Future<void> cambiarEstado(String id, ObligationStatus status) {
     return (_db.update(_db.obligations)..where((o) => o.id.equals(id))).write(
-      ObligationsCompanion(status: Value(status), updatedAt: Value(DateTime.now())),
+      ObligationsCompanion(
+        status: Value(status),
+        updatedAt: Value(DateTime.now()),
+      ),
     );
   }
 
@@ -144,13 +149,9 @@ class ObligationsRepository {
               updatedAt: Value(ahora),
             ),
           );
-      await (_db.update(_db.obligations)..where((o) => o.id.equals(id)))
-          .write(
-            ObligationsCompanion(
-              deletedAt: Value(ahora),
-              updatedAt: Value(ahora),
-            ),
-          );
+      await (_db.update(_db.obligations)..where((o) => o.id.equals(id))).write(
+        ObligationsCompanion(deletedAt: Value(ahora), updatedAt: Value(ahora)),
+      );
     });
   }
 
@@ -201,12 +202,13 @@ class ObligationsRepository {
   /// una app local, así que esto sustituye a un cron de servidor.
   Future<void> generarPagosPendientes({DateTime? horizonte}) async {
     final limite = horizonte ?? DateTime.now().add(const Duration(days: 30));
-    final activas = await (_db.select(_db.obligations)..where(
-          (o) =>
-              o.status.equalsValue(ObligationStatus.activo) &
-              o.deletedAt.isNull(),
-        ))
-        .get();
+    final activas =
+        await (_db.select(_db.obligations)..where(
+              (o) =>
+                  o.status.equalsValue(ObligationStatus.activo) &
+                  o.deletedAt.isNull(),
+            ))
+            .get();
 
     for (final obligation in activas) {
       if (obligation.accountId == null) continue;
@@ -241,28 +243,31 @@ class ObligationsRepository {
 
     await _db.transaction(() async {
       for (final fecha in ocurrencias) {
-        await _db.into(_db.transactions).insert(
-          TransactionsCompanion.insert(
-            id: const Uuid().v7(),
-            userId: userId,
-            concept: obligation.concept,
-            // 0 = "todavía no se sabe cuánto es" (obligación sin monto
-            // fijo, ej. la luz). Nunca ocurre en una transacción real, así
-            // que `confirmarPago` lo detecta y exige el monto verdadero.
-            amount: obligation.amountPerPeriod ?? 0,
-            dueDate: fecha,
-            type: tipoTransaccion,
-            status: const Value(TransactionStatus.pendiente),
-            accountId: obligation.accountId!,
-            categoryId: Value(obligation.categoryId),
-            obligationId: Value(obligation.id),
-            createdAt: Value(ahora),
-            updatedAt: Value(ahora),
-          ),
-        );
+        await _db
+            .into(_db.transactions)
+            .insert(
+              TransactionsCompanion.insert(
+                id: const Uuid().v7(),
+                userId: userId,
+                concept: obligation.concept,
+                // 0 = "todavía no se sabe cuánto es" (obligación sin monto
+                // fijo, ej. la luz). Nunca ocurre en una transacción real, así
+                // que `confirmarPago` lo detecta y exige el monto verdadero.
+                amount: obligation.amountPerPeriod ?? 0,
+                dueDate: fecha,
+                type: tipoTransaccion,
+                status: const Value(TransactionStatus.pendiente),
+                accountId: obligation.accountId!,
+                categoryId: Value(obligation.categoryId),
+                obligationId: Value(obligation.id),
+                createdAt: Value(ahora),
+                updatedAt: Value(ahora),
+              ),
+            );
       }
-      await (_db.update(_db.obligations)..where((o) => o.id.equals(obligation.id)))
-          .write(
+      await (_db.update(
+        _db.obligations,
+      )..where((o) => o.id.equals(obligation.id))).write(
         ObligationsCompanion(
           lastGeneratedDate: Value(limite),
           updatedAt: Value(ahora),

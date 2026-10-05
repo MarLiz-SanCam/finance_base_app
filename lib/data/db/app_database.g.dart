@@ -60,6 +60,39 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _creditLimitMeta = const VerificationMeta(
+    'creditLimit',
+  );
+  @override
+  late final GeneratedColumn<int> creditLimit = GeneratedColumn<int>(
+    'credit_limit',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statementDayMeta = const VerificationMeta(
+    'statementDay',
+  );
+  @override
+  late final GeneratedColumn<int> statementDay = GeneratedColumn<int>(
+    'statement_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _paymentDueDayMeta = const VerificationMeta(
+    'paymentDueDay',
+  );
+  @override
+  late final GeneratedColumn<int> paymentDueDay = GeneratedColumn<int>(
+    'payment_due_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -102,6 +135,9 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     name,
     type,
     currentBalance,
+    creditLimit,
+    statementDay,
+    paymentDueDay,
     createdAt,
     updatedAt,
     deletedAt,
@@ -145,6 +181,33 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         currentBalance.isAcceptableOrUnknown(
           data['current_balance']!,
           _currentBalanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('credit_limit')) {
+      context.handle(
+        _creditLimitMeta,
+        creditLimit.isAcceptableOrUnknown(
+          data['credit_limit']!,
+          _creditLimitMeta,
+        ),
+      );
+    }
+    if (data.containsKey('statement_day')) {
+      context.handle(
+        _statementDayMeta,
+        statementDay.isAcceptableOrUnknown(
+          data['statement_day']!,
+          _statementDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('payment_due_day')) {
+      context.handle(
+        _paymentDueDayMeta,
+        paymentDueDay.isAcceptableOrUnknown(
+          data['payment_due_day']!,
+          _paymentDueDayMeta,
         ),
       );
     }
@@ -197,6 +260,18 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.int,
         data['${effectivePrefix}current_balance'],
       )!,
+      creditLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}credit_limit'],
+      ),
+      statementDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}statement_day'],
+      ),
+      paymentDueDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}payment_due_day'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -227,6 +302,9 @@ class Account extends DataClass implements Insertable<Account> {
   final String name;
   final AccountType type;
   final int currentBalance;
+  final int? creditLimit;
+  final int? statementDay;
+  final int? paymentDueDay;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -236,6 +314,9 @@ class Account extends DataClass implements Insertable<Account> {
     required this.name,
     required this.type,
     required this.currentBalance,
+    this.creditLimit,
+    this.statementDay,
+    this.paymentDueDay,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -250,6 +331,15 @@ class Account extends DataClass implements Insertable<Account> {
       map['type'] = Variable<String>($AccountsTable.$convertertype.toSql(type));
     }
     map['current_balance'] = Variable<int>(currentBalance);
+    if (!nullToAbsent || creditLimit != null) {
+      map['credit_limit'] = Variable<int>(creditLimit);
+    }
+    if (!nullToAbsent || statementDay != null) {
+      map['statement_day'] = Variable<int>(statementDay);
+    }
+    if (!nullToAbsent || paymentDueDay != null) {
+      map['payment_due_day'] = Variable<int>(paymentDueDay);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -265,6 +355,15 @@ class Account extends DataClass implements Insertable<Account> {
       name: Value(name),
       type: Value(type),
       currentBalance: Value(currentBalance),
+      creditLimit: creditLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(creditLimit),
+      statementDay: statementDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(statementDay),
+      paymentDueDay: paymentDueDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentDueDay),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -286,6 +385,9 @@ class Account extends DataClass implements Insertable<Account> {
         serializer.fromJson<String>(json['type']),
       ),
       currentBalance: serializer.fromJson<int>(json['currentBalance']),
+      creditLimit: serializer.fromJson<int?>(json['creditLimit']),
+      statementDay: serializer.fromJson<int?>(json['statementDay']),
+      paymentDueDay: serializer.fromJson<int?>(json['paymentDueDay']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -302,6 +404,9 @@ class Account extends DataClass implements Insertable<Account> {
         $AccountsTable.$convertertype.toJson(type),
       ),
       'currentBalance': serializer.toJson<int>(currentBalance),
+      'creditLimit': serializer.toJson<int?>(creditLimit),
+      'statementDay': serializer.toJson<int?>(statementDay),
+      'paymentDueDay': serializer.toJson<int?>(paymentDueDay),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -314,6 +419,9 @@ class Account extends DataClass implements Insertable<Account> {
     String? name,
     AccountType? type,
     int? currentBalance,
+    Value<int?> creditLimit = const Value.absent(),
+    Value<int?> statementDay = const Value.absent(),
+    Value<int?> paymentDueDay = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -323,6 +431,11 @@ class Account extends DataClass implements Insertable<Account> {
     name: name ?? this.name,
     type: type ?? this.type,
     currentBalance: currentBalance ?? this.currentBalance,
+    creditLimit: creditLimit.present ? creditLimit.value : this.creditLimit,
+    statementDay: statementDay.present ? statementDay.value : this.statementDay,
+    paymentDueDay: paymentDueDay.present
+        ? paymentDueDay.value
+        : this.paymentDueDay,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -336,6 +449,15 @@ class Account extends DataClass implements Insertable<Account> {
       currentBalance: data.currentBalance.present
           ? data.currentBalance.value
           : this.currentBalance,
+      creditLimit: data.creditLimit.present
+          ? data.creditLimit.value
+          : this.creditLimit,
+      statementDay: data.statementDay.present
+          ? data.statementDay.value
+          : this.statementDay,
+      paymentDueDay: data.paymentDueDay.present
+          ? data.paymentDueDay.value
+          : this.paymentDueDay,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -350,6 +472,9 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('name: $name, ')
           ..write('type: $type, ')
           ..write('currentBalance: $currentBalance, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('statementDay: $statementDay, ')
+          ..write('paymentDueDay: $paymentDueDay, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -364,6 +489,9 @@ class Account extends DataClass implements Insertable<Account> {
     name,
     type,
     currentBalance,
+    creditLimit,
+    statementDay,
+    paymentDueDay,
     createdAt,
     updatedAt,
     deletedAt,
@@ -377,6 +505,9 @@ class Account extends DataClass implements Insertable<Account> {
           other.name == this.name &&
           other.type == this.type &&
           other.currentBalance == this.currentBalance &&
+          other.creditLimit == this.creditLimit &&
+          other.statementDay == this.statementDay &&
+          other.paymentDueDay == this.paymentDueDay &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -388,6 +519,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<String> name;
   final Value<AccountType> type;
   final Value<int> currentBalance;
+  final Value<int?> creditLimit;
+  final Value<int?> statementDay;
+  final Value<int?> paymentDueDay;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -398,6 +532,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.name = const Value.absent(),
     this.type = const Value.absent(),
     this.currentBalance = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.statementDay = const Value.absent(),
+    this.paymentDueDay = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -409,6 +546,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     required String name,
     required AccountType type,
     this.currentBalance = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.statementDay = const Value.absent(),
+    this.paymentDueDay = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -423,6 +563,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<String>? name,
     Expression<String>? type,
     Expression<int>? currentBalance,
+    Expression<int>? creditLimit,
+    Expression<int>? statementDay,
+    Expression<int>? paymentDueDay,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -434,6 +577,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (name != null) 'name': name,
       if (type != null) 'type': type,
       if (currentBalance != null) 'current_balance': currentBalance,
+      if (creditLimit != null) 'credit_limit': creditLimit,
+      if (statementDay != null) 'statement_day': statementDay,
+      if (paymentDueDay != null) 'payment_due_day': paymentDueDay,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -447,6 +593,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<String>? name,
     Value<AccountType>? type,
     Value<int>? currentBalance,
+    Value<int?>? creditLimit,
+    Value<int?>? statementDay,
+    Value<int?>? paymentDueDay,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -458,6 +607,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       name: name ?? this.name,
       type: type ?? this.type,
       currentBalance: currentBalance ?? this.currentBalance,
+      creditLimit: creditLimit ?? this.creditLimit,
+      statementDay: statementDay ?? this.statementDay,
+      paymentDueDay: paymentDueDay ?? this.paymentDueDay,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -485,6 +637,15 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (currentBalance.present) {
       map['current_balance'] = Variable<int>(currentBalance.value);
     }
+    if (creditLimit.present) {
+      map['credit_limit'] = Variable<int>(creditLimit.value);
+    }
+    if (statementDay.present) {
+      map['statement_day'] = Variable<int>(statementDay.value);
+    }
+    if (paymentDueDay.present) {
+      map['payment_due_day'] = Variable<int>(paymentDueDay.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -508,6 +669,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('name: $name, ')
           ..write('type: $type, ')
           ..write('currentBalance: $currentBalance, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('statementDay: $statementDay, ')
+          ..write('paymentDueDay: $paymentDueDay, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3578,6 +3742,9 @@ typedef $$AccountsTableCreateCompanionBuilder =
       required String name,
       required AccountType type,
       Value<int> currentBalance,
+      Value<int?> creditLimit,
+      Value<int?> statementDay,
+      Value<int?> paymentDueDay,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -3590,6 +3757,9 @@ typedef $$AccountsTableUpdateCompanionBuilder =
       Value<String> name,
       Value<AccountType> type,
       Value<int> currentBalance,
+      Value<int?> creditLimit,
+      Value<int?> statementDay,
+      Value<int?> paymentDueDay,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -3651,6 +3821,21 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<int> get currentBalance => $composableBuilder(
     column: $table.currentBalance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get statementDay => $composableBuilder(
+    column: $table.statementDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get paymentDueDay => $composableBuilder(
+    column: $table.paymentDueDay,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3729,6 +3914,21 @@ class $$AccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get statementDay => $composableBuilder(
+    column: $table.statementDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get paymentDueDay => $composableBuilder(
+    column: $table.paymentDueDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3768,6 +3968,21 @@ class $$AccountsTableAnnotationComposer
 
   GeneratedColumn<int> get currentBalance => $composableBuilder(
     column: $table.currentBalance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get statementDay => $composableBuilder(
+    column: $table.statementDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get paymentDueDay => $composableBuilder(
+    column: $table.paymentDueDay,
     builder: (column) => column,
   );
 
@@ -3839,6 +4054,9 @@ class $$AccountsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<AccountType> type = const Value.absent(),
                 Value<int> currentBalance = const Value.absent(),
+                Value<int?> creditLimit = const Value.absent(),
+                Value<int?> statementDay = const Value.absent(),
+                Value<int?> paymentDueDay = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -3849,6 +4067,9 @@ class $$AccountsTableTableManager
                 name: name,
                 type: type,
                 currentBalance: currentBalance,
+                creditLimit: creditLimit,
+                statementDay: statementDay,
+                paymentDueDay: paymentDueDay,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -3861,6 +4082,9 @@ class $$AccountsTableTableManager
                 required String name,
                 required AccountType type,
                 Value<int> currentBalance = const Value.absent(),
+                Value<int?> creditLimit = const Value.absent(),
+                Value<int?> statementDay = const Value.absent(),
+                Value<int?> paymentDueDay = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -3871,6 +4095,9 @@ class $$AccountsTableTableManager
                 name: name,
                 type: type,
                 currentBalance: currentBalance,
+                creditLimit: creditLimit,
+                statementDay: statementDay,
+                paymentDueDay: paymentDueDay,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

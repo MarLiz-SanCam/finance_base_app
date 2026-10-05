@@ -46,17 +46,52 @@ class _FormCuentaSheetState extends ConsumerState<FormCuentaSheet> {
     text: widget.cuentaExistente?.name,
   );
   final _saldoInicialController = TextEditingController(text: '0');
+  late final _limiteController = TextEditingController(
+    text: widget.cuentaExistente?.creditLimit == null
+        ? ''
+        : (widget.cuentaExistente!.creditLimit! / 100).toStringAsFixed(2),
+  );
+
+  late final _corteController = TextEditingController(
+    text: widget.cuentaExistente?.statementDay?.toString() ?? '',
+  );
+  late final _pagoController = TextEditingController(
+    text: widget.cuentaExistente?.paymentDueDay?.toString() ?? '',
+  );
 
   late AccountType _tipo = widget.cuentaExistente?.type ?? AccountType.efectivo;
   bool _guardando = false;
 
   bool get _editando => widget.cuentaExistente != null;
+  bool get _esCredito => _tipo == AccountType.credito;
 
   @override
   void dispose() {
     _nombreController.dispose();
     _saldoInicialController.dispose();
+    _limiteController.dispose();
+    _corteController.dispose();
+    _pagoController.dispose();
     super.dispose();
+  }
+
+  String? _validarDia(String? valor) {
+    final dia = int.tryParse(valor?.trim() ?? '');
+    if (dia == null || dia < 1 || dia > 31) return 'Un día entre 1 y 31.';
+    return null;
+  }
+
+  String? _validarMonto(String? valor, {required bool obligatorio}) {
+    if (valor == null || valor.trim().isEmpty) {
+      return obligatorio ? 'Indica el límite de crédito.' : null;
+    }
+    try {
+      final centavos = Money.pesosACentavos(valor);
+      if (obligatorio && centavos <= 0) return 'Debe ser mayor a cero.';
+    } on FormatException {
+      return 'Monto inválido.';
+    }
+    return null;
   }
 
   Future<void> _guardar() async {
@@ -65,21 +100,35 @@ class _FormCuentaSheetState extends ConsumerState<FormCuentaSheet> {
     setState(() => _guardando = true);
     try {
       final repo = ref.read(accountsRepositoryProvider);
+      final limite = _esCredito
+          ? Money.pesosACentavos(_limiteController.text)
+          : null;
+      final diaCorte = _esCredito ? int.parse(_corteController.text) : null;
+      final diaPago = _esCredito ? int.parse(_pagoController.text) : null;
       if (_editando) {
         await repo.actualizar(
           id: widget.cuentaExistente!.id,
           name: _nombreController.text.trim(),
           type: _tipo,
+          limiteCreditoCentavos: limite,
+          diaCorte: diaCorte,
+          diaPago: diaPago,
         );
       } else {
+        final saldoInicial = Money.pesosACentavos(
+          _saldoInicialController.text.isEmpty
+              ? '0'
+              : _saldoInicialController.text,
+        );
         await repo.crear(
           name: _nombreController.text.trim(),
           type: _tipo,
-          saldoInicialCentavos: Money.pesosACentavos(
-            _saldoInicialController.text.isEmpty
-                ? '0'
-                : _saldoInicialController.text,
-          ),
+          // En crédito el usuario captura la deuda actual (positiva); el
+          // saldo se guarda en negativo.
+          saldoInicialCentavos: _esCredito ? -saldoInicial : saldoInicial,
+          limiteCreditoCentavos: limite,
+          diaCorte: diaCorte,
+          diaPago: diaPago,
         );
       }
       if (mounted) Navigator.of(context).pop();
@@ -201,11 +250,64 @@ class _FormCuentaSheetState extends ConsumerState<FormCuentaSheet> {
                     ],
                     onChanged: (valor) => setState(() => _tipo = valor!),
                   ),
+                  if (_esCredito) ...[
+                    const SizedBox(height: 12),
+                    AppFormTextField(
+                      icon: MdiIcons.creditCardOutline,
+                      label: 'Límite de Crédito',
+                      controller: _limiteController,
+                      prefixText: r'$ ',
+                      hintText: 'Ej. 20000.00',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      validator: (valor) =>
+                          _validarMonto(valor, obligatorio: true),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: AppFormTextField(
+                            icon: Icons.content_cut,
+                            label: 'Día de Corte',
+                            controller: _corteController,
+                            hintText: 'Ej. 10',
+                            maxLength: 2,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            validator: _validarDia,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppFormTextField(
+                            icon: Icons.event_outlined,
+                            label: 'Día de Pago',
+                            controller: _pagoController,
+                            hintText: 'Ej. 28',
+                            maxLength: 2,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            validator: _validarDia,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   if (!_editando) ...[
                     const SizedBox(height: 12),
                     AppFormTextField(
                       icon: MdiIcons.cash,
-                      label: 'Saldo Inicial',
+                      label: _esCredito ? 'Deuda Actual' : 'Saldo Inicial',
                       controller: _saldoInicialController,
                       prefixText: r'$ ',
                       hintText: 'Ej. 500.00',
@@ -215,20 +317,17 @@ class _FormCuentaSheetState extends ConsumerState<FormCuentaSheet> {
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
-                      validator: (valor) {
-                        if (valor == null || valor.isEmpty) return null;
-                        try {
-                          Money.pesosACentavos(valor);
-                        } on FormatException {
-                          return 'Monto inválido.';
-                        }
-                        return null;
-                      },
+                      validator: (valor) =>
+                          _validarMonto(valor, obligatorio: false),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Después de crearla, el saldo se calcula solo a '
-                      'partir de las transacciones.',
+                      _esCredito
+                          ? 'Lo que ya debes en la tarjeta. Después de '
+                                'crearla, se calcula solo a partir de las '
+                                'transacciones.'
+                          : 'Después de crearla, el saldo se calcula solo a '
+                                'partir de las transacciones.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

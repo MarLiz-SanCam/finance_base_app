@@ -23,8 +23,7 @@ class Obligations extends Table {
   TextColumn get userId => text()();
   TextColumn get concept => text().withLength(min: 1, max: 150)();
   TextColumn get categoryId => text().references(Categories, #id)();
-  TextColumn get accountId =>
-      text().nullable().references(Accounts, #id)();
+  TextColumn get accountId => text().nullable().references(Accounts, #id)();
   TextColumn get type => textEnum<ObligationType>()();
   TextColumn get frequency => textEnum<ObligationFrequency>()();
 
@@ -48,10 +47,9 @@ class Obligations extends Table {
   /// `quincenal` (el usuario elige ambas fechas; ya no se asumen día 15 y
   /// último día de mes). Se ignora para el resto de las frecuencias.
   IntColumn get paymentDay2 => integer().nullable()();
-  TextColumn get status =>
-      textEnum<ObligationStatus>().withDefault(
-        Constant(ObligationStatus.activo.name),
-      )();
+  TextColumn get status => textEnum<ObligationStatus>().withDefault(
+    Constant(ObligationStatus.activo.name),
+  )();
   DateTimeColumn get lastGeneratedDate => dateTime().nullable()();
 
   // Campos exclusivos para el tipo 'progresivo' (créditos/préstamos).
@@ -59,10 +57,8 @@ class Obligations extends Table {
   DateTimeColumn get startDate => dateTime().nullable()();
   DateTimeColumn get endDate => dateTime().nullable()();
 
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override

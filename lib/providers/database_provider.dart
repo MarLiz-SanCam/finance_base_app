@@ -47,9 +47,7 @@ final obligationsRepositoryProvider = Provider<ObligationsRepository>((ref) {
   );
 });
 
-final transactionsRepositoryProvider = Provider<TransactionsRepository>((
-  ref,
-) {
+final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
   return TransactionsRepository(
     ref.watch(appDatabaseProvider),
     ref.watch(accountsRepositoryProvider),

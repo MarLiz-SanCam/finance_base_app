@@ -20,10 +20,9 @@ class CategoriesRepository {
   }
 
   Stream<List<Category>> watchByType(CategoryType type) {
-    return (_db.select(_db.categories)..where(
-          (c) => c.type.equalsValue(type) & c.deletedAt.isNull(),
-        ))
-        .watch();
+    return (_db.select(
+      _db.categories,
+    )..where((c) => c.type.equalsValue(type) & c.deletedAt.isNull())).watch();
   }
 
   Future<Category> obtener(String id) {
@@ -45,18 +44,20 @@ class CategoriesRepository {
     final id = const Uuid().v7();
     final userId = await _identity.obtenerUserId();
     final ahora = DateTime.now();
-    await _db.into(_db.categories).insert(
-      CategoriesCompanion.insert(
-        id: id,
-        userId: userId,
-        name: name,
-        type: type,
-        color: Value(color),
-        budgetLimit: Value(presupuestoQuincenalCentavos),
-        createdAt: Value(ahora),
-        updatedAt: Value(ahora),
-      ),
-    );
+    await _db
+        .into(_db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            id: id,
+            userId: userId,
+            name: name,
+            type: type,
+            color: Value(color),
+            budgetLimit: Value(presupuestoQuincenalCentavos),
+            createdAt: Value(ahora),
+            updatedAt: Value(ahora),
+          ),
+        );
     return id;
   }
 
@@ -146,7 +147,12 @@ class CategoriesRepository {
     String categoryId, {
     required DateTime desde,
     required DateTime hasta,
-  }) => _montoEnRango(categoryId, TransactionType.gasto, desde: desde, hasta: hasta);
+  }) => _montoEnRango(
+    categoryId,
+    TransactionType.gasto,
+    desde: desde,
+    hasta: hasta,
+  );
 
   /// Ingresado en la categoría dentro de `[desde, hasta)`. Simétrico a
   /// [gastadoEnRango]; las categorías de ingreso no tienen `budget_limit`,

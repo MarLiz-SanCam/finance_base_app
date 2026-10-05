@@ -24,9 +24,16 @@ class AppMainAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
   });
 
+  // Un poco más alto que el toolbar por defecto (56) y con más ancho
+  // reservado para el botón circular (que ya de por sí creció a 44 + 16 de
+  // padding = 60): así ninguno de los dos lados se ve apretado contra el
+  // borde ni contra el título.
+  static const _toolbarHeight = 64.0;
+  static const _leadingWidth = 64.0;
+
   @override
   Size get preferredSize =>
-      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0));
+      Size.fromHeight(_toolbarHeight + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +45,8 @@ class AppMainAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       centerTitle: true,
       automaticallyImplyLeading: false,
-      leadingWidth: 56,
+      toolbarHeight: _toolbarHeight,
+      leadingWidth: _leadingWidth,
       leading: onHelp == null
           ? const _EmptyCircleSlot()
           : AppCircularIconButton(

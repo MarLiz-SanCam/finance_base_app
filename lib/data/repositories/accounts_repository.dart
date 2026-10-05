@@ -29,39 +29,98 @@ class AccountsRepository {
     required String name,
     required AccountType type,
     int saldoInicialCentavos = 0,
+    int? limiteCreditoCentavos,
+    int? diaCorte,
+    int? diaPago,
   }) async {
+    final limite = _limiteValido(type, limiteCreditoCentavos);
+    final corte = _diaValido(type, diaCorte, 'de corte');
+    final pago = _diaValido(type, diaPago, 'de pago');
     final id = const Uuid().v7();
     final userId = await _identity.obtenerUserId();
     final ahora = DateTime.now();
-    await _db.into(_db.accounts).insert(
-      AccountsCompanion.insert(
-        id: id,
-        userId: userId,
-        name: name,
-        type: type,
-        currentBalance: Value(saldoInicialCentavos),
-        createdAt: Value(ahora),
-        updatedAt: Value(ahora),
-      ),
-    );
+    await _db
+        .into(_db.accounts)
+        .insert(
+          AccountsCompanion.insert(
+            id: id,
+            userId: userId,
+            name: name,
+            type: type,
+            currentBalance: Value(saldoInicialCentavos),
+            creditLimit: Value(limite),
+            statementDay: Value(corte),
+            paymentDueDay: Value(pago),
+            createdAt: Value(ahora),
+            updatedAt: Value(ahora),
+          ),
+        );
     return id;
   }
 
-  /// Renombra o cambia el tipo de una cuenta. No toca `current_balance`:
-  /// el saldo se deriva de las transacciones pagadas (ver [applyDelta] y
-  /// [recalcularSaldo]).
+  /// Las cuentas de crédito exigen un límite mayor a cero; en el resto de
+  /// tipos el límite se descarta (`null`).
+  int? _limiteValido(AccountType type, int? limiteCentavos) {
+    if (type != AccountType.credito) return null;
+    if (limiteCentavos == null || limiteCentavos <= 0) {
+      throw ArgumentError(
+        'Una cuenta de crédito necesita un límite de crédito mayor a cero.',
+      );
+    }
+    return limiteCentavos;
+  }
+
+  /// Día del mes (1-31) de corte o de pago; solo se conserva en cuentas de
+  /// crédito y es opcional (`null` en cuentas anteriores a esta función).
+  int? _diaValido(AccountType type, int? dia, String etiqueta) {
+    if (type != AccountType.credito || dia == null) return null;
+    if (dia < 1 || dia > 31) {
+      throw ArgumentError('El día $etiqueta debe estar entre 1 y 31.');
+    }
+    return dia;
+  }
+
+  /// Renombra o cambia el tipo, límite y fechas de corte/pago de una cuenta.
+  /// No toca `current_balance`: el saldo se deriva de las transacciones
+  /// pagadas (ver [applyDelta] y [recalcularSaldo]).
   Future<void> actualizar({
     required String id,
     required String name,
     required AccountType type,
+    int? limiteCreditoCentavos,
+    int? diaCorte,
+    int? diaPago,
   }) {
+    final limite = _limiteValido(type, limiteCreditoCentavos);
+    final corte = _diaValido(type, diaCorte, 'de corte');
+    final pago = _diaValido(type, diaPago, 'de pago');
     return (_db.update(_db.accounts)..where((a) => a.id.equals(id))).write(
       AccountsCompanion(
         name: Value(name),
         type: Value(type),
+        creditLimit: Value(limite),
+        statementDay: Value(corte),
+        paymentDueDay: Value(pago),
         updatedAt: Value(DateTime.now()),
       ),
     );
+  }
+
+  /// Verifica que restar [montoCentavos] de la cuenta no exceda su límite de
+  /// crédito. Solo aplica a cuentas de crédito con límite; en las demás no
+  /// hace nada. Debe llamarse antes de registrar un cargo (gasto o
+  /// transferencia de salida) sobre la cuenta.
+  Future<void> validarCapacidad(String accountId, int montoCentavos) async {
+    final cuenta = await obtener(accountId);
+    final limite = cuenta.creditLimit;
+    if (cuenta.type != AccountType.credito || limite == null) return;
+    final disponible = limite + cuenta.currentBalance;
+    if (montoCentavos > disponible) {
+      throw CreditoInsuficienteException(
+        'El cargo excede el crédito disponible de "${cuenta.name}".',
+        disponibleCentavos: disponible < 0 ? 0 : disponible,
+      );
+    }
   }
 
   /// Borrado suave: marca `deleted_at` en vez de eliminar la fila, para que
@@ -115,14 +174,15 @@ class AccountsRepository {
   Future<void> applyDelta(String accountId, int deltaCentavos) async {
     if (deltaCentavos == 0) return;
     final filasActualizadas =
-        await (_db.update(_db.accounts)..where((a) => a.id.equals(accountId)))
-            .write(
-      AccountsCompanion.custom(
-        currentBalance:
-            _db.accounts.currentBalance + Variable<int>(deltaCentavos),
-        updatedAt: Variable<DateTime>(DateTime.now()),
-      ),
-    );
+        await (_db.update(
+          _db.accounts,
+        )..where((a) => a.id.equals(accountId))).write(
+          AccountsCompanion.custom(
+            currentBalance:
+                _db.accounts.currentBalance + Variable<int>(deltaCentavos),
+            updatedAt: Variable<DateTime>(DateTime.now()),
+          ),
+        );
     if (filasActualizadas == 0) {
       throw StateError('La cuenta $accountId no existe.');
     }
@@ -148,8 +208,9 @@ class AccountsRepository {
         .getSingle();
     final saldo = fila.read<int>('saldo');
 
-    await (_db.update(_db.accounts)..where((a) => a.id.equals(accountId)))
-        .write(
+    await (_db.update(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).write(
       AccountsCompanion(
         currentBalance: Value(saldo),
         updatedAt: Value(DateTime.now()),

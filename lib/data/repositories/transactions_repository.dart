@@ -120,6 +120,9 @@ class TransactionsRepository {
     final ahora = DateTime.now();
 
     await _db.transaction(() async {
+      if (type == TransactionType.gasto) {
+        await _accounts.validarCapacidad(accountId, amountCentavos);
+      }
       await _db
           .into(_db.transactions)
           .insert(
@@ -174,6 +177,10 @@ class TransactionsRepository {
         throw ArgumentError('Indica el monto antes de confirmar el pago.');
       }
 
+      if (transaccion.type == TransactionType.gasto) {
+        await _accounts.validarCapacidad(transaccion.accountId, montoFinal);
+      }
+
       final fechaPago = fecha ?? DateTime.now();
       await (_db.update(
         _db.transactions,
@@ -212,7 +219,9 @@ class TransactionsRepository {
       throw ArgumentError('El monto debe ser mayor a cero.');
     }
     if (cuentaOrigenId == cuentaDestinoId) {
-      throw ArgumentError('La cuenta de origen y destino no pueden ser la misma.');
+      throw ArgumentError(
+        'La cuenta de origen y destino no pueden ser la misma.',
+      );
     }
 
     final id = const Uuid().v7();
@@ -220,6 +229,7 @@ class TransactionsRepository {
     final ahora = DateTime.now();
 
     await _db.transaction(() async {
+      await _accounts.validarCapacidad(cuentaOrigenId, amountCentavos);
       await _db
           .into(_db.transactions)
           .insert(
@@ -310,6 +320,11 @@ class TransactionsRepository {
           anterior.accountId,
           -_delta(anterior.type, anterior.amount),
         );
+        // Se valida ya revertido el efecto anterior; si excede el crédito
+        // se lanza y la transacción de BD completa se deshace.
+        if (type == TransactionType.gasto) {
+          await _accounts.validarCapacidad(accountId, amountCentavos);
+        }
         await _accounts.applyDelta(accountId, _delta(type, amountCentavos));
       }
     });

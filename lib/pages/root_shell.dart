@@ -9,13 +9,13 @@ import '../core/components/app_showcase.dart';
 import '../core/components/bottomNavBar.dart';
 import '../core/components/rounded_body.dart';
 import '../core/showcase/showcase_keys.dart';
+import '../data/db/enums.dart';
 import '../providers/database_provider.dart';
 import 'balance/balance_page.dart';
 import 'categorias/form_categoria.dart';
 import 'cuentas/form_cuenta.dart';
 import 'home/home.dart';
-import 'home/widgets/registro_rapido_gasto.dart';
-import 'ingresos/form_ingresos.dart';
+import 'home/widgets/registro_rapido.dart';
 import 'obligaciones/form_obligacion.dart';
 import 'organizacion/organizacion_page.dart';
 import 'usuario/usuario_page.dart';
@@ -160,15 +160,14 @@ class _RootShellState extends ConsumerState<RootShell>
   void _tocarBotonCentral(BuildContext context) {
     switch (_indice) {
       case 0: // Resumen
-        mostrarRegistroRapidoDeGasto(context);
+        mostrarRegistroRapido(context);
       case 1: // Balance
-        if (_balanceTabController.index == 0) {
-          mostrarRegistroRapidoDeGasto(context);
-        } else {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const FormIngresoPage()));
-        }
+        mostrarRegistroRapido(
+          context,
+          tipoInicial: _balanceTabController.index == 0
+              ? TransactionType.gasto
+              : TransactionType.ingreso,
+        );
       case 2: // Organización
         switch (_organizacionTabController.index) {
           case 0:
