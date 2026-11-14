@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import 'buttons.dart';
 
@@ -50,7 +50,7 @@ class AppMainAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: onHelp == null
           ? const _EmptyCircleSlot()
           : AppCircularIconButton(
-              icon: MdiIcons.helpCircleOutline,
+              icon: Symbols.help,
               tooltip: 'Ayuda',
               onPressed: onHelp,
             ),

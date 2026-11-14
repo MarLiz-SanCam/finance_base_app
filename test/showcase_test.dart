@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 void main() {
   group('ShowcaseProgressRepository', () {
@@ -95,7 +95,7 @@ void main() {
 
     expect(find.text('Balance de la quincena'), findsNothing);
 
-    await tester.tap(find.byIcon(MdiIcons.helpCircleOutline).first);
+    await tester.tap(find.byIcon(Symbols.help).first);
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Balance de la quincena'), findsOneWidget);

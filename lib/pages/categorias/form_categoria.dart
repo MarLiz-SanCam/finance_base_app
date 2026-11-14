@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/components/buttons.dart';
 import '../../core/components/color_picker.dart';
@@ -229,7 +229,7 @@ class _FormCategoriaSheetState extends ConsumerState<FormCategoriaSheet> {
                   if (esGasto) ...[
                     const SizedBox(height: 12),
                     AppFormTextField(
-                      icon: MdiIcons.cash,
+                      icon: Symbols.universal_currency_alt,
                       label: 'Presupuesto por Quincena',
                       controller: _presupuestoController,
                       prefixText: r'$ ',

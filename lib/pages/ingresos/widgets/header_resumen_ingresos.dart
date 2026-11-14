@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/money.dart';
 import '../../../core/periodo_quincenal.dart';
@@ -101,7 +101,7 @@ class _CuentaDisponible extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(MdiIcons.cash, size: 14, color: Colors.green.shade600),
+            Icon(Symbols.universal_currency_alt, size: 14, color: Colors.green.shade600),
             const SizedBox(width: 4),
             Text(
               cuenta.name,

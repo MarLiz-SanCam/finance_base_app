@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/components/app_showcase.dart';
 import '../../core/components/appBar.dart';
@@ -50,7 +50,7 @@ class OrganizacionPage extends StatelessWidget {
                       'Mueve dinero de una de tus cuentas a otra. Solo aparece en este tab.',
                   borderRadius: 100,
                   child: AppCircularIconButton(
-                    icon: MdiIcons.transfer,
+                    icon: Symbols.swap_horiz,
                     tooltip: 'Transferir entre cuentas',
                     onPressed: () => _transferirEntreCuentas(context),
                   ),

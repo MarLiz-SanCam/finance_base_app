@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/components/amount_text.dart';
 import '../../core/components/app_card.dart';
@@ -262,7 +262,7 @@ class _FilaMonto extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(MdiIcons.cash, color: Colors.green.shade600),
+        Icon(Symbols.universal_currency_alt, color: Colors.green.shade600),
         const SizedBox(width: 8),
         AppAmountText(
           centavos,
@@ -303,7 +303,7 @@ class _FilaTipoFrecuencia extends StatelessWidget {
             ),
           )
         else ...[
-          Icon(MdiIcons.cash, size: 18, color: Colors.green.shade600),
+          Icon(Symbols.universal_currency_alt, size: 18, color: Colors.green.shade600),
           const SizedBox(width: 6),
           Flexible(
             child: AppAmountText(

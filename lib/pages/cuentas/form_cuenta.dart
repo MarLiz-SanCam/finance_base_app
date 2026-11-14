@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/components/buttons.dart';
 import '../../core/components/form_field.dart';
@@ -238,7 +238,7 @@ class _FormCuentaSheetState extends ConsumerState<FormCuentaSheet> {
                   ),
                   const SizedBox(height: 12),
                   AppFormDropdownField<AccountType>(
-                    icon: MdiIcons.walletOutline,
+                    icon: Symbols.account_balance_wallet,
                     label: 'Tipo de Cuenta',
                     value: _tipo,
                     items: [
@@ -253,7 +253,7 @@ class _FormCuentaSheetState extends ConsumerState<FormCuentaSheet> {
                   if (_esCredito) ...[
                     const SizedBox(height: 12),
                     AppFormTextField(
-                      icon: MdiIcons.creditCardOutline,
+                      icon: Symbols.credit_card,
                       label: 'Límite de Crédito',
                       controller: _limiteController,
                       prefixText: r'$ ',
@@ -306,7 +306,7 @@ class _FormCuentaSheetState extends ConsumerState<FormCuentaSheet> {
                   if (!_editando) ...[
                     const SizedBox(height: 12),
                     AppFormTextField(
-                      icon: MdiIcons.cash,
+                      icon: Symbols.universal_currency_alt,
                       label: _esCredito ? 'Deuda Actual' : 'Saldo Inicial',
                       controller: _saldoInicialController,
                       prefixText: r'$ ',

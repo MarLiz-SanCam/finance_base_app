@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 import '../core/components/app_showcase.dart';
@@ -62,7 +62,7 @@ class _RootShellState extends ConsumerState<RootShell>
   );
 
   static final _items = [
-    AppBottomNavItem(icon: MdiIcons.finance, label: 'Resumen'),
+    AppBottomNavItem(icon: Symbols.monitoring, label: 'Resumen'),
     AppBottomNavItem(icon: Icons.swap_vert, label: 'Balance'),
     AppBottomNavItem(icon: Icons.dashboard_outlined, label: 'Organización'),
     AppBottomNavItem(icon: Icons.person_outline, label: 'Usuario'),

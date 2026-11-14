@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/components/buttons.dart';
 import '../../core/components/form_field.dart';
@@ -385,7 +385,7 @@ class _FormObligacionSheetState extends ConsumerState<FormObligacionSheet> {
                   ),
                   const SizedBox(height: 12),
                   _CampoCuenta(
-                    icon: MdiIcons.walletOutline,
+                    icon: Symbols.account_balance_wallet,
                     cuentasAsync: cuentasAsync,
                     cuentaId: _cuentaId,
                     onChanged: (valor) => setState(() => _cuentaId = valor),
@@ -416,7 +416,7 @@ class _FormObligacionSheetState extends ConsumerState<FormObligacionSheet> {
                   ),
                   const SizedBox(height: 12),
                   AppFormTextField(
-                    icon: MdiIcons.cash,
+                    icon: Symbols.universal_currency_alt,
                     label: _esProgresivo
                         ? 'Cuota por Periodo'
                         : 'Monto por Periodo',
@@ -453,7 +453,7 @@ class _FormObligacionSheetState extends ConsumerState<FormObligacionSheet> {
                   if (_esProgresivo) ...[
                     const SizedBox(height: 12),
                     AppFormTextField(
-                      icon: MdiIcons.cashMultiple,
+                      icon: Symbols.payments,
                       label: 'Monto Total de la Deuda',
                       controller: _totalController,
                       prefixText: r'$ ',

@@ -39,8 +39,8 @@ dependencies:
   drift_flutter: ^0.3.1
   fl_chart: ^1.2.0
   uuid: ^4.6.0
-  material_design_icons_flutter: ^7.0.7296
   showcaseview: ^5.1.0
+  material_symbols_icons: ^4.2960.0
 
 dev_dependencies:
   flutter_test:

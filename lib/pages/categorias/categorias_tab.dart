@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/components/amount_text.dart';
 import '../../core/components/app_card.dart';
@@ -241,7 +241,7 @@ class _CategoriaCard extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(MdiIcons.cash, color: Color(categoria.color)),
+              Icon(Symbols.universal_currency_alt, color: Color(categoria.color)),
               const SizedBox(width: 8),
               AppAmountText(
                 resumen.montoQuincena,
