@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Paleta de color elegida; cada una tiene versión clara y oscura.
 enum AppPalette { green, yellow, pink, teal }
@@ -92,6 +92,12 @@ class AppTheme {
     letterSpacing: 1.2,
   );
 
+  static OutlineInputBorder _inputBorder(Color color, {double width = 1}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: color, width: width),
+      );
+
   static ThemeData _build(Brightness brightness, AppColors c) {
     final scheme = ColorScheme(
       brightness: brightness,
@@ -104,6 +110,16 @@ class AppTheme {
       onError: Colors.white,
       surface: c.surface,
       onSurface: c.textPrimary,
+      onSurfaceVariant: c.textSecondary,
+      primaryContainer: c.subtle,
+      onPrimaryContainer: c.textPrimary,
+      secondaryContainer: c.subtle,
+      onSecondaryContainer: c.textPrimary,
+      surfaceContainerHighest: c.subtle,
+      outline: c.divider,
+      outlineVariant: c.divider,
+      inverseSurface: c.textPrimary,
+      onInverseSurface: c.background,
     );
     return ThemeData(
       useMaterial3: true,
@@ -113,20 +129,55 @@ class AppTheme {
       scaffoldBackgroundColor: c.background,
       textTheme: textThemeFor(c.textPrimary),
       appBarTheme: AppBarTheme(
-        backgroundColor: c.surface,
+        backgroundColor: c.background,
         foregroundColor: c.textPrimary,
-        titleTextStyle: h2.copyWith(color: c.textPrimary),
+        titleTextStyle: h3.copyWith(color: c.textPrimary),
         elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      cardTheme: CardThemeData(
+        color: c.surface,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: c.divider),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: c.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        showDragHandle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: c.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+      listTileTheme: const ListTileThemeData(
+        contentPadding: EdgeInsets.symmetric(horizontal: 4),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: c.primary,
+        linearTrackColor: c.subtle,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: c.primary,
           foregroundColor: c.onPrimary,
           disabledBackgroundColor: c.primary.withValues(alpha: 0.5),
-          minimumSize: const Size(double.infinity, 60),
+          elevation: 0,
+          minimumSize: const Size(double.infinity, 52),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(12),
           ),
           textStyle: buttonTextStyle,
         ),
@@ -159,32 +210,17 @@ class AppTheme {
         ),
         labelStyle: TextStyle(color: c.textSecondary),
         hintFadeDuration: const Duration(milliseconds: 100),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
+        border: _inputBorder(c.divider),
+        enabledBorder: _inputBorder(c.divider),
+        focusedBorder: _inputBorder(c.textPrimary, width: 1.5),
+        errorBorder: _inputBorder(scheme.error),
+        focusedErrorBorder: _inputBorder(scheme.error, width: 1.5),
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
         menuStyle: MenuStyle(
           backgroundColor: WidgetStatePropertyAll(c.surface),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ),
@@ -231,123 +267,131 @@ class AppTheme {
   //? Cada paleta va de más oscuro (1) a más claro (5).
   //? Light: fondo = 5, primario = 3, texto = 1. Dark: fondo = 1, primario = 3, texto = 5.
   static const _greenLight = AppColors(
-    background: aliceBlue,
+    background: Color(0xFFFAFAF9),
     surface: Colors.white,
     primary: mutedTeal,
     onPrimary: blueDark,
     accent: pineTeal,
     textPrimary: blueDark,
-    textSecondary: pineTeal,
-    divider: celadon,
+    textSecondary: Color(0xFF6B7280),
+    divider: Color(0xFFE7E7E4),
     chatBubbleOutgoing: mutedTeal,
     onChatBubbleOutgoing: blueDark,
     chatBubbleIncoming: celadon,
     onChatBubbleIncoming: blueDark,
+    subtle: Color(0xFFF1F1EF),
   );
 
   static const _greenDark = AppColors(
-    background: blueDark,
-    surface: pineTeal,
+    background: Color(0xFF0E1214),
+    surface: Color(0xFF161B1E),
     primary: mutedTeal,
     onPrimary: blueDark,
     accent: celadon,
     textPrimary: aliceBlue,
-    textSecondary: celadon,
-    divider: mutedTeal,
+    textSecondary: Color(0xFF9AA1A9),
+    divider: Color(0xFF262C30),
     chatBubbleOutgoing: pineTeal,
     onChatBubbleOutgoing: aliceBlue,
     chatBubbleIncoming: celadon,
     onChatBubbleIncoming: blueDark,
+    subtle: Color(0xFF1E2427),
   );
 
   static const _yellowLight = AppColors(
-    background: porcelain,
+    background: Color(0xFFFAFAF9),
     surface: Colors.white,
     primary: mustard,
     onPrimary: jetNlack,
     accent: darkTeal,
     textPrimary: jetNlack,
-    textSecondary: darkTeal,
-    divider: jasmine,
+    textSecondary: Color(0xFF6B7280),
+    divider: Color(0xFFE7E7E4),
     chatBubbleOutgoing: mustard,
     onChatBubbleOutgoing: jetNlack,
     chatBubbleIncoming: jasmine,
     onChatBubbleIncoming: jetNlack,
+    subtle: Color(0xFFF1F1EF),
   );
 
   static const _yellowDark = AppColors(
-    background: jetNlack,
-    surface: darkTeal,
+    background: Color(0xFF0F1214),
+    surface: Color(0xFF161B1E),
     primary: mustard,
     onPrimary: jetNlack,
     accent: jasmine,
     textPrimary: porcelain,
-    textSecondary: jasmine,
-    divider: mustard,
+    textSecondary: Color(0xFF9AA1A9),
+    divider: Color(0xFF262C30),
     chatBubbleOutgoing: darkTeal,
     onChatBubbleOutgoing: porcelain,
     chatBubbleIncoming: jasmine,
     onChatBubbleIncoming: jetNlack,
+    subtle: Color(0xFF1E2427),
   );
 
   static const _pinkLight = AppColors(
-    background: lavenderBlush,
+    background: Color(0xFFFAFAF9),
     surface: Colors.white,
     primary: pinkTeal,
     onPrimary: coffeeBean,
     accent: nightBordeaux,
     textPrimary: coffeeBean,
-    textSecondary: nightBordeaux,
-    divider: pinkyshTeal,
+    textSecondary: Color(0xFF6B7280),
+    divider: Color(0xFFE7E7E4),
     chatBubbleOutgoing: pinkTeal,
     onChatBubbleOutgoing: coffeeBean,
     chatBubbleIncoming: pinkyshTeal,
     onChatBubbleIncoming: coffeeBean,
+    subtle: Color(0xFFF1F1EF),
   );
 
   static const _tealLight = AppColors(
-    background: lavenderTeal,
+    background: Color(0xFFFAFAF9),
     surface: Colors.white,
     primary: lightTeal,
     onPrimary: dark,
     accent: submarine,
     textPrimary: dark,
-    textSecondary: submarine,
-    divider: teal,
+    textSecondary: Color(0xFF6B7280),
+    divider: Color(0xFFE7E7E4),
     chatBubbleOutgoing: lightTeal,
     onChatBubbleOutgoing: dark,
     chatBubbleIncoming: teal,
     onChatBubbleIncoming: dark,
+    subtle: Color(0xFFF1F1EF),
   );
 
   static const _tealDark = AppColors(
-    background: dark,
-    surface: submarine,
+    background: Color(0xFF0D1012),
+    surface: Color(0xFF161B1E),
     primary: lightTeal,
     onPrimary: dark,
     accent: teal,
     textPrimary: lavenderTeal,
-    textSecondary: teal,
-    divider: lightTeal,
+    textSecondary: Color(0xFF9AA1A9),
+    divider: Color(0xFF262C30),
     chatBubbleOutgoing: submarine,
     onChatBubbleOutgoing: lavenderTeal,
     chatBubbleIncoming: teal,
     onChatBubbleIncoming: dark,
+    subtle: Color(0xFF1E2427),
   );
 
   static const _pinkDark = AppColors(
-    background: coffeeBean,
-    surface: nightBordeaux,
+    background: Color(0xFF121012),
+    surface: Color(0xFF161B1E),
     primary: pinkTeal,
     onPrimary: coffeeBean,
     accent: pinkyshTeal,
     textPrimary: lavenderBlush,
-    textSecondary: pinkyshTeal,
-    divider: pinkTeal,
+    textSecondary: Color(0xFF9AA1A9),
+    divider: Color(0xFF262C30),
     chatBubbleOutgoing: nightBordeaux,
     onChatBubbleOutgoing: lavenderBlush,
     chatBubbleIncoming: pinkyshTeal,
     onChatBubbleIncoming: coffeeBean,
+    subtle: Color(0xFF1E2427),
   );
 
   /// Arma el [TextTheme] a partir de los estilos de arriba (h1/h2/h3/body/
@@ -383,6 +427,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color onChatBubbleOutgoing; //? texto sobre chatBubbleOutgoing
   final Color chatBubbleIncoming; //? fondo de burbuja de mensajes recibidos
   final Color onChatBubbleIncoming; //? texto sobre chatBubbleIncoming
+  final Color subtle; //? relleno tenue (chips, pistas de progreso, tab activo)
 
   const AppColors({
     required this.background,
@@ -397,6 +442,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onChatBubbleOutgoing,
     required this.chatBubbleIncoming,
     required this.onChatBubbleIncoming,
+    required this.subtle,
   });
   @override
   AppColors copyWith({
@@ -412,6 +458,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? onChatBubbleOutgoing,
     Color? chatBubbleIncoming,
     Color? onChatBubbleIncoming,
+    Color? subtle,
   }) {
     return AppColors(
       background: background ?? this.background,
@@ -426,6 +473,7 @@ class AppColors extends ThemeExtension<AppColors> {
       onChatBubbleOutgoing: onChatBubbleOutgoing ?? this.onChatBubbleOutgoing,
       chatBubbleIncoming: chatBubbleIncoming ?? this.chatBubbleIncoming,
       onChatBubbleIncoming: onChatBubbleIncoming ?? this.onChatBubbleIncoming,
+      subtle: subtle ?? this.subtle,
     );
   }
 
@@ -461,6 +509,7 @@ class AppColors extends ThemeExtension<AppColors> {
         other.onChatBubbleIncoming,
         t,
       )!,
+      subtle: Color.lerp(subtle, other.subtle, t)!,
     );
   }
 }

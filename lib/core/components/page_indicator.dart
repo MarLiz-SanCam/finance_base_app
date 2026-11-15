@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Indicador de página: la página activa es una píldora alargada y las
 /// demás, puntos pequeños y tenues.

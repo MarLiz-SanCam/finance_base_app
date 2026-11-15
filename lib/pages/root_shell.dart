@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 import '../core/components/app_showcase.dart';
 import '../core/components/bottomNavBar.dart';
-import '../core/components/rounded_body.dart';
 import '../core/showcase/showcase_keys.dart';
 import '../data/db/enums.dart';
 import '../providers/database_provider.dart';
@@ -21,7 +20,7 @@ import 'organizacion/organizacion_page.dart';
 import 'usuario/usuario_page.dart';
 
 /// Cascarón de navegación: Resumen, Balance, Organización y Usuario (mock),
-/// con una barra inferior de dos ítems por lado (Resumen/Balance a la
+/// con una barra inferior plana de dos ítems por lado (Resumen/Balance a la
 /// izquierda, Organización/Usuario a la derecha) y un botón central "+" que
 /// registra según el contexto activo (la pestaña principal y, en
 /// Balance/Organización, el tab interno). Por eso los [TabController] de
@@ -68,8 +67,8 @@ class _RootShellState extends ConsumerState<RootShell>
     AppBottomNavItem(icon: Icons.person_outline, label: 'Usuario'),
   ];
 
-  /// Resumen y Balance a la izquierda de la muesca; Organización y Usuario
-  /// a la derecha (ver [AppBottomNavBar.centerAfterIndex]).
+  /// Resumen y Balance a la izquierda del botón central; Organización y
+  /// Usuario a la derecha (ver [AppBottomNavBar.centerAfterIndex]).
   static const _centerAfterIndex = 1;
 
   /// Pantalla o tab activo, que es la unidad del showcase.
@@ -192,64 +191,35 @@ class _RootShellState extends ConsumerState<RootShell>
       ),
       UsuarioPage(onHelp: _mostrarAyuda),
     ];
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.inverseSurface,
-      body: AppRoundedBody(
-        radius: 50,
-        child: IndexedStack(index: _indice, children: paginas),
-      ),
-      // El botón central se acopla a la muesca de bottomNavigationBar: el
-      // framework lo centra y calcula el recorte exacto en vez de que lo
-      // hagamos a mano (ver AppBottomNavBar/AppFloatingNavButton). En
-      // Usuario (mock, todavía sin nada que registrar) no se muestra: sin
-      // FAB, BottomAppBar tampoco talla la muesca.
-      floatingActionButton: _indice == _items.length - 1
-          ? null
-          : AppShowcase(
-              showcaseKey: ShowcaseKeys.botonCentral,
-              title: 'Botón agregar',
-              description: _descripcionBotonCentral,
-              borderRadius: 100,
-              child: AppFloatingNavButton(
-                icon: Icons.add,
-                tooltip: 'Agregar',
-                onTap: () => _tocarBotonCentral(context),
-              ),
-            ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            child: BottomAppBar(
-              color: colorScheme.inverseSurface,
-              shape: const CircularNotchedRectangle(),
-              notchMargin: 6,
-              padding: EdgeInsets.zero,
-              elevation: 0,
-              height: AppBottomNavBar.trayHeight,
-              child: AppShowcase(
-                showcaseKey: ShowcaseKeys.barraNavegacion,
-                title: 'Navegación',
-                description:
-                    'Cambia entre Resumen, Balance, Organización y Usuario.',
-                borderRadius: 24,
-                tooltipPosition: TooltipPosition.top,
-                child: AppBottomNavBar(
-                  items: _items,
-                  currentIndex: _indice,
-                  onTap: (i) {
-                    setState(() => _indice = i);
-                    _alCambiarPantalla();
-                  },
-                  centerAfterIndex: _centerAfterIndex,
+      body: IndexedStack(index: _indice, children: paginas),
+      bottomNavigationBar: AppShowcase(
+        showcaseKey: ShowcaseKeys.barraNavegacion,
+        title: 'Navegación',
+        description: 'Cambia entre Resumen, Balance, Organización y Usuario.',
+        borderRadius: 0,
+        tooltipPosition: TooltipPosition.top,
+        child: AppBottomNavBar(
+          items: _items,
+          currentIndex: _indice,
+          onTap: (i) {
+            setState(() => _indice = i);
+            _alCambiarPantalla();
+          },
+          centerAfterIndex: _centerAfterIndex,
+          // En Usuario (mock, sin nada que registrar) no hay botón central.
+          centerButton: _indice == _items.length - 1
+              ? null
+              : AppShowcase(
+                  showcaseKey: ShowcaseKeys.botonCentral,
+                  title: 'Botón agregar',
+                  description: _descripcionBotonCentral,
+                  borderRadius: 100,
+                  child: AppAddButton(
+                    tooltip: 'Agregar',
+                    onTap: () => _tocarBotonCentral(context),
+                  ),
                 ),
-              ),
-            ),
-          ),
         ),
       ),
     );

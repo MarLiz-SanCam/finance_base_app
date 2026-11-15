@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Indicador compacto de una cifra con ícono direccional: ícono + etiqueta
 /// en una línea y el [value] justo debajo, alineado con la etiqueta

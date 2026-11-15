@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'buttons.dart';
 
 /// AppBar compartido por los dashboards principales (Resumen, Balance,
-/// Organización): a la izquierda el botón de ayuda que abre el showcase de
-/// la pantalla ([onHelp]; sin él queda un círculo reservado), título
-/// centrado y un círculo a la derecha para la acción contextual de la
-/// pantalla (ej. transferir entre cuentas en Organización). Cuando la
+/// Organización): título alineado a la izquierda y, a la derecha, la acción
+/// contextual de la pantalla ([trailing], ej. transferir entre cuentas en
+/// Organización) y el botón de ayuda que abre el showcase ([onHelp]). Cuando la
 /// pantalla tiene tabs, [bottom] agrega la barra de pestañas debajo del
 /// título.
 class AppMainAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -24,12 +23,7 @@ class AppMainAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
   });
 
-  // Un poco más alto que el toolbar por defecto (56) y con más ancho
-  // reservado para el botón circular (que ya de por sí creció a 44 + 16 de
-  // padding = 60): así ninguno de los dos lados se ve apretado contra el
-  // borde ni contra el título.
   static const _toolbarHeight = 64.0;
-  static const _leadingWidth = 64.0;
 
   @override
   Size get preferredSize =>
@@ -43,41 +37,27 @@ class AppMainAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      centerTitle: true,
+      centerTitle: false,
       automaticallyImplyLeading: false,
       toolbarHeight: _toolbarHeight,
-      leadingWidth: _leadingWidth,
-      leading: onHelp == null
-          ? const _EmptyCircleSlot()
-          : AppCircularIconButton(
-              icon: Symbols.help,
-              tooltip: 'Ayuda',
-              onPressed: onHelp,
-            ),
+      titleSpacing: 20,
       title: Text(
         title,
         style: theme.textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
         ),
       ),
-      actions: [trailing ?? const _EmptyCircleSlot(), const SizedBox(width: 8)],
+      actions: [
+        if (trailing != null) trailing!,
+        if (onHelp != null)
+          AppCircularIconButton(
+            icon: Symbols.help,
+            tooltip: 'Ayuda',
+            onPressed: onHelp,
+          ),
+        const SizedBox(width: 4),
+      ],
       bottom: bottom,
-    );
-  }
-}
-
-/// Reserva el mismo espacio que [AppCircularIconButton] sin dibujar nada,
-/// para que el título quede centrado aunque ese lado no tenga acción.
-class _EmptyCircleSlot extends StatelessWidget {
-  const _EmptyCircleSlot();
-
-  @override
-  Widget build(BuildContext context) {
-    return const IgnorePointer(
-      child: Opacity(
-        opacity: 0,
-        child: AppCircularIconButton(icon: Icons.circle, onPressed: null),
-      ),
     );
   }
 }

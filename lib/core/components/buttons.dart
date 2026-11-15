@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
-/// Botón de acción principal: píldora (stadium) rellena con
+/// Botón de acción principal: relleno plano de esquinas suaves, con
 /// [ColorScheme.primary], ícono opcional + etiqueta. Úsalo para la acción
 /// principal de cada pantalla (guardar, registrar, confirmar).
 class AppPrimaryButton extends StatelessWidget {
@@ -22,8 +22,9 @@ class AppPrimaryButton extends StatelessWidget {
     foregroundColor: colorScheme.onPrimary,
     disabledBackgroundColor: colorScheme.onSurface.withValues(alpha: 0.12),
     disabledForegroundColor: colorScheme.onSurface.withValues(alpha: 0.38),
-    shape: const StadiumBorder(),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    elevation: 0,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     textStyle: const TextStyle(fontWeight: FontWeight.w600),
   );
 
@@ -47,8 +48,7 @@ class AppPrimaryButton extends StatelessWidget {
   }
 }
 
-/// Botón de acción secundaria: píldora (stadium) tonal, con
-/// [ColorScheme.primaryContainer] de fondo. Úsalo junto a [AppPrimaryButton]
+/// Botón de acción secundaria: contorno fino, sin relleno. Úsalo junto a [AppPrimaryButton]
 /// para acciones de menor jerarquía (cancelar, alternativas).
 class AppSecondaryButton extends StatelessWidget {
   final String label;
@@ -64,13 +64,12 @@ class AppSecondaryButton extends StatelessWidget {
     this.expand = false,
   });
 
-  static ButtonStyle _style(ColorScheme colorScheme) => FilledButton.styleFrom(
-    backgroundColor: colorScheme.primaryContainer,
-    foregroundColor: colorScheme.onPrimaryContainer,
-    disabledBackgroundColor: colorScheme.onSurface.withValues(alpha: 0.12),
+  static ButtonStyle _style(ColorScheme colorScheme) => OutlinedButton.styleFrom(
+    foregroundColor: colorScheme.onSurface,
     disabledForegroundColor: colorScheme.onSurface.withValues(alpha: 0.38),
-    shape: const StadiumBorder(),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    side: BorderSide(color: colorScheme.outlineVariant),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     textStyle: const TextStyle(fontWeight: FontWeight.w600),
   );
 
@@ -78,12 +77,12 @@ class AppSecondaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final button = icon == null
-        ? FilledButton(
+        ? OutlinedButton(
             onPressed: onPressed,
             style: _style(colorScheme),
             child: Text(label),
           )
-        : FilledButton.icon(
+        : OutlinedButton.icon(
             onPressed: onPressed,
             style: _style(colorScheme),
             icon: Icon(icon),
@@ -94,7 +93,7 @@ class AppSecondaryButton extends StatelessWidget {
   }
 }
 
-/// Botón circular relleno, para accesos directos compactos. Su primer uso
+/// Botón circular sin relleno (solo ícono), para accesos directos compactos. Su primer uso
 /// es en [AppMainAppBar]; incluye su propio margen horizontal para poder
 /// encadenar varios seguidos sin que el llamador agregue espaciadores.
 /// [size] fija el mismo ancho y alto (nunca un óvalo) para que todos los
@@ -113,7 +112,7 @@ class AppCircularIconButton extends StatelessWidget {
     required this.onPressed,
     this.tooltip,
     this.iconSize = 22,
-    this.size = 44,
+    this.size = 40,
   });
 
   @override
@@ -122,14 +121,13 @@ class AppCircularIconButton extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: IconButton.filled(
+      child: IconButton(
         icon: Icon(icon),
         iconSize: iconSize,
         tooltip: tooltip,
         onPressed: onPressed,
         style: IconButton.styleFrom(
-          backgroundColor: colorScheme.primaryContainer,
-          foregroundColor: colorScheme.onPrimaryContainer,
+          foregroundColor: colorScheme.onSurface,
           shape: const CircleBorder(),
           fixedSize: Size.square(size),
         ),

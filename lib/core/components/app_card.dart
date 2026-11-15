@@ -1,14 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
-/// Tarjeta base de la app: superficie clara con esquinas muy redondeadas y
-/// una sombra suave y difusa (sin el tinte de superficie de [Card]).
+/// Tarjeta base de la app: superficie plana con borde fino y esquinas
+/// suaves, sin sombra. Es el contenedor de las tarjetas de balance,
+/// presupuesto y gráficos. Si se pasa [onTap] responde al toque con ripple.
 ///
-/// Es el contenedor de las tarjetas de balance, presupuesto y gráficos. Si se
-/// pasa [onTap] la tarjeta responde al toque con ripple.
-///
-/// [elevation] no es la elevación de Material: solo controla qué tan grande
-/// y desplazada se dibuja la sombra, para poder "levantar" una tarjeta (ej.
-/// la enfocada en [AppFocusCarousel]).
+/// [elevation] se conserva por compatibilidad (la tarjeta enfocada de
+/// [AppFocusCarousel]): ya no dibuja sombra, solo oscurece un poco el borde.
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -20,7 +17,7 @@ class AppCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
-    this.radius = 20,
+    this.radius = 16,
     this.elevation = 2,
     this.onTap,
   });
@@ -34,13 +31,13 @@ class AppCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: borderRadius,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8 + elevation * 4,
-            offset: Offset(0, elevation * 1.25),
-          ),
-        ],
+        border: Border.all(
+          color: Color.lerp(
+            colorScheme.outlineVariant,
+            colorScheme.onSurfaceVariant,
+            ((elevation - 1) / 12).clamp(0.0, 0.3),
+          )!,
+        ),
       ),
       child: Material(
         type: MaterialType.transparency,

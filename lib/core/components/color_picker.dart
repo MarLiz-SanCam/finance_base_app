@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Paleta curada para el selector de color de categorías: variedad
 /// suficiente para distinguir muchas categorías a simple vista sin

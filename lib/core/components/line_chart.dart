@@ -1,5 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Una serie del [AppLineChart]: una línea con un valor por cada etiqueta
 /// del eje X.

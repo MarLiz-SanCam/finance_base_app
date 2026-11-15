@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 /// Ícono pequeño + etiqueta en una fila, usado arriba de [AppFormTextField]
@@ -17,7 +17,7 @@ class AppFieldLabel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: colorScheme.primary),
+        Icon(icon, size: 16, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: 6),
         Text(
           label,
@@ -41,7 +41,7 @@ InputDecoration _decoracionCampo(
 }) {
   OutlineInputBorder borde(Color color, {double width = 1}) =>
       OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: color, width: width),
       );
 
@@ -49,11 +49,11 @@ InputDecoration _decoracionCampo(
     hintText: hintText,
     prefixText: prefixText,
     filled: true,
-    fillColor: colorScheme.primaryContainer.withValues(alpha: 0.25),
+    fillColor: colorScheme.surface,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    border: borde(colorScheme.primary.withValues(alpha: 0.35)),
-    enabledBorder: borde(colorScheme.primary.withValues(alpha: 0.35)),
-    focusedBorder: borde(colorScheme.primary, width: 1.5),
+    border: borde(colorScheme.outlineVariant),
+    enabledBorder: borde(colorScheme.outlineVariant),
+    focusedBorder: borde(colorScheme.onSurface, width: 1.5),
     errorBorder: borde(colorScheme.error),
     focusedErrorBorder: borde(colorScheme.error, width: 1.5),
   );

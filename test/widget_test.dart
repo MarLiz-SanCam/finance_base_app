@@ -2,7 +2,7 @@ import 'package:drift/native.dart';
 import 'package:finance_base_app/data/db/app_database.dart';
 import 'package:finance_base_app/main.dart';
 import 'package:finance_base_app/providers/database_provider.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';

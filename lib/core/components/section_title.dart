@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Encabezado de una sección de un dashboard ("Balance del periodo",
 /// "Presupuesto", "Histórico"). Con [trailing] opcional alineado a la
@@ -15,7 +15,7 @@ class AppSectionTitle extends StatelessWidget {
     final text = Text(
       title,
       style: theme.textTheme.titleMedium?.copyWith(
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: FontWeight.w600,
         color: theme.colorScheme.onSurface,
       ),
